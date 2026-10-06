@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://arpityadav626.github.io/arpit.fun/sitemap.xml
+Sitemap: https://arpit.fun/sitemap.xml
