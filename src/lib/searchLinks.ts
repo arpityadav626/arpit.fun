@@ -1,83 +1,1156 @@
 /**
  * Clean URL encoder and legitimate discovery search links.
  * All queries are strictly sanitized and encoded with encodeURIComponent.
- * Never includes piracy, torrent, or unauthorized download platforms.
+ * Covers the entire world of legitimate video, film, TV, anime, documentary,
+ * audio, music streaming, and radio platforms.
  */
 
 export const encodeQuery = (query: string): string => encodeURIComponent(query.trim());
 
-// 1. Film & Series Discovery Links
-export const getFilmSearchLinks = (titleOrQuery: string) => {
-  const q = encodeQuery(titleOrQuery);
-  return [
-    {
-      label: 'YouTube (Official Trailers & Clips)',
-      url: `https://www.youtube.com/results?search_query=${encodeQuery(titleOrQuery + ' official trailer')}`,
-      category: 'Video',
-      note: 'Studio trailers, teasers, 4K clips, and interviews',
-      badge: 'YouTube',
-      isPrimary: true,
-    },
-    {
-      label: 'JustWatch (Where to Stream)',
-      url: `https://www.justwatch.com/us/search?q=${q}`,
-      category: 'Streaming Guide',
-      note: 'Search verified streaming providers in your region',
-      badge: 'Aggregator',
-    },
-    {
-      label: 'Internet Archive Cinema',
-      url: `https://archive.org/details/moviesandfilms?query=${q}`,
-      category: 'Public Domain',
-      note: 'Free streaming public domain feature films & classics',
-      badge: 'Archive.org',
-    },
-    {
-      label: 'IMDb Database',
-      url: `https://www.imdb.com/find/?q=${q}&s=tt`,
-      category: 'Database',
-      note: 'Full cast, technical specs, user trivia & ratings',
-      badge: 'Database',
-    },
-    {
-      label: 'Rotten Tomatoes',
-      url: `https://www.rottentomatoes.com/search?search=${q}`,
-      category: 'Reviews',
-      note: 'Tomatometer score and certified critics',
-      badge: 'Critic Score',
-    },
-    {
-      label: 'Google Search',
-      url: `https://www.google.com/search?q=${encodeQuery(titleOrQuery + ' movie series cast review')}`,
-      category: 'General',
-      note: 'Cast, showtimes, critical consensus',
-      badge: 'Overview',
-    },
-    {
-      label: 'IMDb',
-      url: `https://www.imdb.com/find/?q=${q}&s=tt`,
-      category: 'Database',
-      note: 'Full cast, technical specs, user trivia',
-      badge: 'Database',
-    },
-    {
-      label: 'Rotten Tomatoes',
-      url: `https://www.rottentomatoes.com/search?search=${q}`,
-      category: 'Reviews',
-      note: 'Tomatometer score and certified critics',
-      badge: 'Critic Score',
-    },
-    {
-      label: 'Letterboxd',
-      url: `https://letterboxd.com/search/films/${q}/`,
-      category: 'Community',
-      note: 'Cinephile reviews, lists, and ratings',
-      badge: 'Film Diary',
-    },
-  ];
+export interface PlatformLink {
+  id: string;
+  name: string;
+  category: string;
+  tier: 'Free / Ad-Supported' | 'Subscription / Paid' | 'Public Domain / Free' | 'Library Card' | 'Aggregator';
+  badge: string;
+  color: string;
+  description: string;
+  getUrl: (query: string) => string;
+  directHomeUrl: string;
+  isPopular?: boolean;
+}
+
+// ========================================================
+// 1. COMPREHENSIVE GLOBAL MOVIE & VIDEO PLATFORMS (50+)
+// ========================================================
+export const ALL_FILM_PLATFORMS: PlatformLink[] = [
+  // --- A. Free & Ad-Supported (FAST) ---
+  {
+    id: 'youtube',
+    name: 'YouTube Movies & Trailers',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free / Rent',
+    color: '#FF0000',
+    description: 'Official studio trailers, clips, and free full-length licensed movies.',
+    getUrl: (q) => `https://www.youtube.com/results?search_query=${encodeQuery(q + ' full movie official trailer')}`,
+    directHomeUrl: 'https://www.youtube.com/feed/storefront?bp=kgECCOgH',
+    isPopular: true,
+  },
+  {
+    id: 'tubi',
+    name: 'Tubi TV',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: '100% Free',
+    color: '#FA5023',
+    description: 'Over 50,000 free movies and television episodes on-demand (Fox FAST).',
+    getUrl: (q) => `https://tubitv.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://tubitv.com/',
+    isPopular: true,
+  },
+  {
+    id: 'pluto-tv',
+    name: 'Pluto TV',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Live TV',
+    color: '#FFD700',
+    description: 'Hundreds of live linear channels and thousands of on-demand movies by Paramount.',
+    getUrl: (q) => `https://pluto.tv/search/details/${encodeQuery(q)}`,
+    directHomeUrl: 'https://pluto.tv/',
+    isPopular: true,
+  },
+  {
+    id: 'plex',
+    name: 'Plex Free Movies',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free On-Demand',
+    color: '#E5A00D',
+    description: 'Stream 50,000+ free movies, TV shows, and 300+ live TV channels worldwide.',
+    getUrl: (q) => `https://watch.plex.tv/search?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://watch.plex.tv/',
+    isPopular: true,
+  },
+  {
+    id: 'roku-channel',
+    name: 'The Roku Channel',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Movies',
+    color: '#702283',
+    description: 'Free blockbuster movies, hit TV series, and 24/7 live news/sports.',
+    getUrl: (q) => `https://therokuchannel.roku.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://therokuchannel.roku.com/',
+  },
+  {
+    id: 'crackle',
+    name: 'Crackle',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Streaming',
+    color: '#FF6600',
+    description: 'Full-length movies, original series, and classic Hollywood hits without cost.',
+    getUrl: (q) => `https://www.crackle.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.crackle.com/',
+  },
+  {
+    id: 'xumo-play',
+    name: 'Xumo Play',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free TV & Film',
+    color: '#00A3E0',
+    description: 'Comcast & Charter free streaming platform with 300+ channels and on-demand movies.',
+    getUrl: (q) => `https://www.xumo.tv/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.xumo.tv/',
+  },
+  {
+    id: 'popcornflix',
+    name: 'Popcornflix',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Movies',
+    color: '#EF3E36',
+    description: 'Great selection of free comedy, action, thriller, and horror indie cinema.',
+    getUrl: (q) => `https://popcornflix.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://popcornflix.com/',
+  },
+  {
+    id: 'filmzie',
+    name: 'Filmzie',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Indie Cinema',
+    color: '#00C9B7',
+    description: 'Free platform dedicated to independent films and festival award winners.',
+    getUrl: (q) => `https://filmzie.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://filmzie.com/',
+  },
+  {
+    id: 'vudu-free',
+    name: 'Fandango at Home (Vudu)',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free with Ads',
+    color: '#0070CD',
+    description: 'Thousands of free movies with ads alongside 4K theatrical rentals.',
+    getUrl: (q) => `https://www.vudu.com/content/movies/search?searchString=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.vudu.com/',
+  },
+  {
+    id: 'kanopy',
+    name: 'Kanopy',
+    category: 'Free & Ad-Supported',
+    tier: 'Library Card',
+    badge: 'Free via Library',
+    color: '#EA4C89',
+    description: 'Critically-acclaimed movies, A24 catalog, and documentaries free via public library card.',
+    getUrl: (q) => `https://www.kanopy.com/en/search?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.kanopy.com/',
+    isPopular: true,
+  },
+  {
+    id: 'hoopla',
+    name: 'Hoopla Digital',
+    category: 'Free & Ad-Supported',
+    tier: 'Library Card',
+    badge: 'Free via Library',
+    color: '#009CDA',
+    description: 'Borrow digital movies, TV shows, and music with zero waitlists through libraries.',
+    getUrl: (q) => `https://www.hoopladigital.com/search?q=${encodeQuery(q)}&scope=everything&type=direct`,
+    directHomeUrl: 'https://www.hoopladigital.com/',
+  },
+
+  // --- B. Global Premium & Subscription ---
+  {
+    id: 'netflix',
+    name: 'Netflix',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Subscription',
+    color: '#E50914',
+    description: 'The world leading subscription streaming entertainment service.',
+    getUrl: (q) => `https://www.netflix.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.netflix.com/',
+    isPopular: true,
+  },
+  {
+    id: 'prime-video',
+    name: 'Amazon Prime Video',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Prime / Rent',
+    color: '#00A8E1',
+    description: 'Blockbusters, Amazon Originals, 4K HDR releases, and TV subscriptions.',
+    getUrl: (q) => `https://www.amazon.com/s?k=${encodeQuery(q)}&i=instant-video`,
+    directHomeUrl: 'https://www.primevideo.com/',
+    isPopular: true,
+  },
+  {
+    id: 'disney-plus',
+    name: 'Disney+',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Subscription',
+    color: '#113CCF',
+    description: 'Disney, Pixar, Marvel, Star Wars, National Geographic, and Hulu content hub.',
+    getUrl: (q) => `https://www.disneyplus.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.disneyplus.com/',
+    isPopular: true,
+  },
+  {
+    id: 'apple-tv',
+    name: 'Apple TV+',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Originals / 4K',
+    color: '#A2AAAD',
+    description: 'Award-winning Apple Original films and series in pristine 4K Dolby Vision.',
+    getUrl: (q) => `https://tv.apple.com/search?term=${encodeQuery(q)}`,
+    directHomeUrl: 'https://tv.apple.com/',
+    isPopular: true,
+  },
+  {
+    id: 'max',
+    name: 'Max (HBO Max)',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'HBO / Warner Bros',
+    color: '#002BE7',
+    description: 'Iconic HBO series, Warner Bros movies, DC Universe, and Studio Ghibli.',
+    getUrl: (q) => `https://www.max.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.max.com/',
+    isPopular: true,
+  },
+  {
+    id: 'hulu',
+    name: 'Hulu',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Subscription',
+    color: '#1CE783',
+    description: 'Extensive library of popular TV series, FX on Hulu, and contemporary movies.',
+    getUrl: (q) => `https://www.hulu.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.hulu.com/',
+  },
+  {
+    id: 'paramount-plus',
+    name: 'Paramount+',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Paramount & CBS',
+    color: '#0064FF',
+    description: 'Star Trek universe, Yellowstone, Paramount Pictures cinema, and CBS Sports.',
+    getUrl: (q) => `https://www.paramountplus.com/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.paramountplus.com/',
+  },
+  {
+    id: 'peacock',
+    name: 'Peacock',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'NBCUniversal',
+    color: '#000000',
+    description: 'NBCUniversal streaming network: live sports, Universal Pictures cinema, and original hits.',
+    getUrl: (q) => `https://www.peacocktv.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.peacocktv.com/',
+  },
+  {
+    id: 'lionsgate-play',
+    name: 'Lionsgate Play',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Action & Drama',
+    color: '#FF6B00',
+    description: 'Hollywood blockbusters, John Wick universe, and premium international cinema.',
+    getUrl: (q) => `https://lionsgateplay.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://lionsgateplay.com/',
+  },
+  {
+    id: 'shudder',
+    name: 'Shudder',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'Horror & Thriller',
+    color: '#E50914',
+    description: 'The premier streaming service dedicated exclusively to horror, thrillers, and supernatural cinema.',
+    getUrl: (q) => `https://www.shudder.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.shudder.com/',
+  },
+  {
+    id: 'britbox',
+    name: 'BritBox',
+    category: 'Premium & Subscription',
+    tier: 'Subscription / Paid',
+    badge: 'British TV & Film',
+    color: '#002B49',
+    description: 'The best of British mysteries, prestige dramas, comedies, and classic cinema by BBC and ITV.',
+    getUrl: (q) => `https://www.britbox.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.britbox.com/',
+  },
+
+  // --- C. Cinephile, Arthouse & Curated ---
+  {
+    id: 'mubi',
+    name: 'MUBI',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: 'Curated Cinema',
+    color: '#002855',
+    description: 'Ever-changing collection of hand-picked beautiful, interesting, incredible movies from visionary directors.',
+    getUrl: (q) => `https://mubi.com/en/search/films?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://mubi.com/',
+    isPopular: true,
+  },
+  {
+    id: 'criterion-channel',
+    name: 'The Criterion Channel',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: 'Classics & Masters',
+    color: '#333333',
+    description: 'The definitive streaming service for classic and contemporary films from around the globe.',
+    getUrl: (q) => `https://www.criterionchannel.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.criterionchannel.com/',
+    isPopular: true,
+  },
+  {
+    id: 'bfi-player',
+    name: 'BFI Player',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: 'British Film Institute',
+    color: '#C62B28',
+    description: 'Landmark cinema, new releases, and UK film heritage treasures curated by the British Film Institute.',
+    getUrl: (q) => `https://player.bfi.org.uk/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://player.bfi.org.uk/',
+  },
+  {
+    id: 'curzon-home-cinema',
+    name: 'Curzon Home Cinema',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: 'European & World',
+    color: '#8A2BE2',
+    description: 'World cinema, Cannes prize winners, and independent releases on-demand.',
+    getUrl: (q) => `https://homecinema.curzon.com/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://homecinema.curzon.com/',
+  },
+  {
+    id: 'indieflix',
+    name: 'IndieFlix',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: 'Film Festivals',
+    color: '#F45D48',
+    description: 'Features, shorts, and documentaries discovered at film festivals worldwide.',
+    getUrl: (q) => `https://indieflix.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://indieflix.com/',
+  },
+  {
+    id: 'curiosity-stream',
+    name: 'Curiosity Stream',
+    category: 'Cinephile & Arthouse',
+    tier: 'Subscription / Paid',
+    badge: '4K Documentaries',
+    color: '#FFAE00',
+    description: 'Award-winning non-fiction documentaries spanning science, history, nature, and technology in 4K.',
+    getUrl: (q) => `https://curiositystream.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://curiositystream.com/',
+    isPopular: true,
+  },
+  {
+    id: 'vimeo',
+    name: 'Vimeo On Demand & Staff Picks',
+    category: 'Cinephile & Arthouse',
+    tier: 'Free / Ad-Supported',
+    badge: 'Indie Filmmakers',
+    color: '#1AB7EA',
+    description: 'High-definition film festival selections, creator-owned independent cinema, and Staff Picks.',
+    getUrl: (q) => `https://vimeo.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://vimeo.com/',
+    isPopular: true,
+  },
+  {
+    id: 'dailymotion',
+    name: 'Dailymotion',
+    category: 'Free & Ad-Supported',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Video Portal',
+    color: '#0066DC',
+    description: 'Global video sharing platform featuring news, official movie trailers, music videos, and clips.',
+    getUrl: (q) => `https://www.dailymotion.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.dailymotion.com/',
+  },
+
+  // --- D. Public Domain & Historical Archives (Free Legally) ---
+  {
+    id: 'archive-org',
+    name: 'Internet Archive Cinema',
+    category: 'Public Domain & Archives',
+    tier: 'Public Domain / Free',
+    badge: 'Free Public Domain',
+    color: '#2C3E50',
+    description: 'Historic feature films, silent era masterpieces, sci-fi classics, and film noir in public domain.',
+    getUrl: (q) => `https://archive.org/details/moviesandfilms?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://archive.org/details/moviesandfilms',
+    isPopular: true,
+  },
+  {
+    id: 'open-culture',
+    name: 'Open Culture Free Movies',
+    category: 'Public Domain & Archives',
+    tier: 'Public Domain / Free',
+    badge: 'Curated 1,150+',
+    color: '#34495E',
+    description: 'Curated index of 1,150+ free classic movies online (Tarkovsky, Hitchcock, Kubrick shorts).',
+    getUrl: (_q) => `https://www.openculture.com/freemoviesonline`,
+    directHomeUrl: 'https://www.openculture.com/freemoviesonline',
+  },
+  {
+    id: 'public-domain-movies',
+    name: 'Public Domain Movies Net',
+    category: 'Public Domain & Archives',
+    tier: 'Public Domain / Free',
+    badge: 'Copyright Free',
+    color: '#16A085',
+    description: 'Archive of fully public-domain movies available to download and watch completely free.',
+    getUrl: (q) => `https://publicdomainmovie.net/search.php?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://publicdomainmovie.net/',
+  },
+  {
+    id: 'top-documentary-films',
+    name: 'Top Documentary Films',
+    category: 'Public Domain & Archives',
+    tier: 'Public Domain / Free',
+    badge: 'Free Documentaries',
+    color: '#D35400',
+    description: 'Watch thousands of full-length free documentaries covering history, science, cosmos, and philosophy.',
+    getUrl: (q) => `https://topdocumentaryfilms.com/?s=${encodeQuery(q)}`,
+    directHomeUrl: 'https://topdocumentaryfilms.com/',
+  },
+  {
+    id: 'loc-films',
+    name: 'Library of Congress National Film Registry',
+    category: 'Public Domain & Archives',
+    tier: 'Public Domain / Free',
+    badge: 'Cultural Heritage',
+    color: '#2980B9',
+    description: 'Historic American moving pictures preserved forever for cultural significance.',
+    getUrl: (q) => `https://www.loc.gov/film-and-videos/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.loc.gov/film-and-videos/',
+  },
+
+  // --- E. Anime & Animation ---
+  {
+    id: 'crunchyroll',
+    name: 'Crunchyroll',
+    category: 'Anime & Animation',
+    tier: 'Subscription / Paid',
+    badge: 'World #1 Anime',
+    color: '#FF6400',
+    description: 'The world largest collection of anime, simulcasts directly from Tokyo, and manga.',
+    getUrl: (q) => `https://www.crunchyroll.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.crunchyroll.com/',
+    isPopular: true,
+  },
+  {
+    id: 'hidive',
+    name: 'HIDIVE',
+    category: 'Anime & Animation',
+    tier: 'Subscription / Paid',
+    badge: 'Anime Exclusives',
+    color: '#00A0E9',
+    description: 'Uncensored anime simulcasts, classic OVAs, dubs, and cult favorites.',
+    getUrl: (q) => `https://www.hidive.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.hidive.com/',
+  },
+  {
+    id: 'retrocrush',
+    name: 'RetroCrush',
+    category: 'Anime & Animation',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free Classic Anime',
+    color: '#9B51E0',
+    description: 'Golden era classic anime from the 70s, 80s, and 90s available free on-demand.',
+    getUrl: (q) => `https://www.retrocrush.tv/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.retrocrush.tv/',
+  },
+  {
+    id: 'viki',
+    name: 'Rakuten Viki',
+    category: 'Anime & Animation',
+    tier: 'Free / Ad-Supported',
+    badge: 'Asian Drama & Film',
+    color: '#00B4D8',
+    description: 'Korean dramas, Chinese historical cinema, Japanese anime, and fan-subtitled movies.',
+    getUrl: (q) => `https://www.viki.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.viki.com/',
+  },
+
+  // --- F. Indian & South Asian Cinema ---
+  {
+    id: 'jiocinema',
+    name: 'JioCinema',
+    category: 'Indian & Regional',
+    tier: 'Free / Ad-Supported',
+    badge: 'Free & Premium',
+    color: '#E11D48',
+    description: 'Indian blockbusters in Hindi, Tamil, Telugu, HBO/WB slate, and live streaming sports.',
+    getUrl: (q) => `https://www.jiocinema.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.jiocinema.com/',
+    isPopular: true,
+  },
+  {
+    id: 'hotstar',
+    name: 'Disney+ Hotstar',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: 'Hotstar Specials',
+    color: '#0C2340',
+    description: 'Bollywood, regional South Indian blockbusters, Star Network serials, and Marvel/Disney.',
+    getUrl: (q) => `https://www.hotstar.com/in/explore?search_query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.hotstar.com/',
+    isPopular: true,
+  },
+  {
+    id: 'sonyliv',
+    name: 'SonyLIV',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: 'Sony Originals',
+    color: '#0072CE',
+    description: 'Critically acclaimed Indian original thriller series, Sony Pictures cinema, and live sports.',
+    getUrl: (q) => `https://www.sonyliv.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.sonyliv.com/',
+  },
+  {
+    id: 'zee5',
+    name: 'ZEE5',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: '12+ Languages',
+    color: '#5C2D91',
+    description: 'Vast multi-lingual Indian catalog covering Hindi, Punjabi, Bengali, Marathi, and South cinema.',
+    getUrl: (q) => `https://www.zee5.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.zee5.com/',
+  },
+  {
+    id: 'aha',
+    name: 'Aha Video',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: 'Telugu & Tamil 100%',
+    color: '#FF6D00',
+    description: '100% Telugu and Tamil blockbuster cinema, web series, and exclusive world premieres.',
+    getUrl: (q) => `https://www.aha.video/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.aha.video/',
+  },
+  {
+    id: 'sunnxt',
+    name: 'Sun NXT',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: 'South India Giant',
+    color: '#FF3366',
+    description: 'Over 4,000 South Indian films across Tamil, Telugu, Malayalam, and Kannada.',
+    getUrl: (q) => `https://www.sunnxt.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.sunnxt.com/',
+  },
+  {
+    id: 'hoichoi',
+    name: 'Hoichoi',
+    category: 'Indian & Regional',
+    tier: 'Subscription / Paid',
+    badge: 'Bengali Cinema',
+    color: '#C2185B',
+    description: 'The world largest on-demand digital entertainment platform for Bengali cinema and originals.',
+    getUrl: (q) => `https://www.hoichoi.tv/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.hoichoi.tv/',
+  },
+
+  // --- G. Meta-Search Aggregators & Film Databases ---
+  {
+    id: 'justwatch',
+    name: 'JustWatch Stream Guide',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Universal Locator',
+    color: '#FBC02D',
+    description: 'The world leading streaming search guide: checks where to watch legally across all platforms.',
+    getUrl: (q) => `https://www.justwatch.com/us/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.justwatch.com/',
+    isPopular: true,
+  },
+  {
+    id: 'reelgood',
+    name: 'Reelgood',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Streaming Search',
+    color: '#00C853',
+    description: 'One single search for all subscription services, free platforms, and rental stores.',
+    getUrl: (q) => `https://reelgood.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://reelgood.com/',
+  },
+  {
+    id: 'letterboxd',
+    name: 'Letterboxd',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Cinephile Community',
+    color: '#00E054',
+    description: 'Social network for film lovers: logging, rating, member reviews, and curated cinephile lists.',
+    getUrl: (q) => `https://letterboxd.com/search/films/${encodeQuery(q)}/`,
+    directHomeUrl: 'https://letterboxd.com/',
+    isPopular: true,
+  },
+  {
+    id: 'imdb',
+    name: 'IMDb',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Official Database',
+    color: '#F5C518',
+    description: 'The world authoritative source for movie ratings, cast biographies, technical details, and trivia.',
+    getUrl: (q) => `https://www.imdb.com/find/?q=${encodeQuery(q)}&s=tt`,
+    directHomeUrl: 'https://www.imdb.com/',
+    isPopular: true,
+  },
+  {
+    id: 'rotten-tomatoes',
+    name: 'Rotten Tomatoes',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Critic Tomatometer',
+    color: '#FA320A',
+    description: 'Certified Fresh Tomatometer scores and consensus reviews from top professional film critics.',
+    getUrl: (q) => `https://www.rottentomatoes.com/search?search=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.rottentomatoes.com/',
+  },
+  {
+    id: 'tmdb',
+    name: 'The Movie Database (TMDb)',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Open Community DB',
+    color: '#01B4E4',
+    description: 'Comprehensive community-built movie metadata repository with high-res posters and backdrops.',
+    getUrl: (q) => `https://www.themoviedb.org/search?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.themoviedb.org/',
+  },
+  {
+    id: 'trakt',
+    name: 'Trakt.tv',
+    category: 'Meta Search & Databases',
+    tier: 'Aggregator',
+    badge: 'Auto Scrobbler',
+    color: '#ED1C24',
+    description: 'Automatically track what you are watching across media centers and mobile devices.',
+    getUrl: (q) => `https://trakt.tv/search?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://trakt.tv/',
+  },
+];
+
+// Helper to filter film platforms
+export const getFilteredFilmPlatforms = (category: string = 'All') => {
+  if (category === 'All') return ALL_FILM_PLATFORMS;
+  return ALL_FILM_PLATFORMS.filter((p) => p.category === category);
 };
 
-// 2. Books & Research Scholarly Links
+// ========================================================
+// 2. COMPREHENSIVE GLOBAL MUSIC & AUDIO PLATFORMS (35+)
+// ========================================================
+export interface MusicPlatformLink {
+  id: string;
+  name: string;
+  category: string;
+  tier: 'Free with Ads / Premium' | 'Hi-Res Lossless' | 'Artist Direct' | 'Global Radio' | 'Lyrics & Community' | 'Public Domain';
+  badge: string;
+  color: string;
+  description: string;
+  getUrl: (query: string) => string;
+  directHomeUrl: string;
+  isPopular?: boolean;
+}
+
+export const ALL_MUSIC_PLATFORMS: MusicPlatformLink[] = [
+  // --- A. Global Streaming Giants ---
+  {
+    id: 'spotify',
+    name: 'Spotify',
+    category: 'Global Streaming',
+    tier: 'Free with Ads / Premium',
+    badge: 'World #1 Audio',
+    color: '#1DB954',
+    description: '100+ million tracks, curated algorithmic playlists, podcasts, and audiobooks.',
+    getUrl: (q) => `https://open.spotify.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://open.spotify.com/',
+    isPopular: true,
+  },
+  {
+    id: 'apple-music',
+    name: 'Apple Music',
+    category: 'Global Streaming',
+    tier: 'Hi-Res Lossless',
+    badge: 'Lossless ALAC',
+    color: '#FA2D48',
+    description: 'Master quality up to 24-bit/192kHz lossless audio, Spatial Audio with Dolby Atmos.',
+    getUrl: (q) => `https://music.apple.com/us/search?term=${encodeQuery(q)}`,
+    directHomeUrl: 'https://music.apple.com/',
+    isPopular: true,
+  },
+  {
+    id: 'youtube-music',
+    name: 'YouTube Music',
+    category: 'Global Streaming',
+    tier: 'Free with Ads / Premium',
+    badge: 'Official & Remixes',
+    color: '#FF0000',
+    description: 'Official music tracks, live concert recordings, rare acoustic versions, and fan remixes.',
+    getUrl: (q) => `https://music.youtube.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://music.youtube.com/',
+    isPopular: true,
+  },
+  {
+    id: 'amazon-music',
+    name: 'Amazon Music Unlimited',
+    category: 'Global Streaming',
+    tier: 'Hi-Res Lossless',
+    badge: 'HD & Ultra HD',
+    color: '#00A8E1',
+    description: 'Millions of songs in Ultra HD with spatial audio playback across devices.',
+    getUrl: (q) => `https://music.amazon.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://music.amazon.com/',
+  },
+  {
+    id: 'tidal',
+    name: 'TIDAL',
+    category: 'Global Streaming',
+    tier: 'Hi-Res Lossless',
+    badge: 'Hi-Res FLAC 24-bit',
+    color: '#000000',
+    description: 'Pristine audiophile sound quality, bit-perfect high-res FLAC streaming, and direct artist royalties.',
+    getUrl: (q) => `https://listen.tidal.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://listen.tidal.com/',
+    isPopular: true,
+  },
+  {
+    id: 'deezer',
+    name: 'Deezer',
+    category: 'Global Streaming',
+    tier: 'Hi-Res Lossless',
+    badge: 'HiFi Audio',
+    color: '#EF5466',
+    description: '16-bit FLAC CD-quality audio streaming with signature Flow personalized radio.',
+    getUrl: (q) => `https://www.deezer.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.deezer.com/',
+  },
+  {
+    id: 'qobuz',
+    name: 'Qobuz',
+    category: 'Global Streaming',
+    tier: 'Hi-Res Lossless',
+    badge: 'True Audiophile 192k',
+    color: '#004B87',
+    description: 'The premier streaming service for music lovers and audiophiles, dedicated to high-resolution audio.',
+    getUrl: (q) => `https://open.qobuz.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://open.qobuz.com/',
+  },
+  {
+    id: 'soundcloud',
+    name: 'SoundCloud',
+    category: 'Global Streaming',
+    tier: 'Free with Ads / Premium',
+    badge: 'Creator Community',
+    color: '#FF5500',
+    description: 'Next-wave artists, bedroom producers, DJ live sets, synthwave, and bootlegs.',
+    getUrl: (q) => `https://soundcloud.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://soundcloud.com/',
+    isPopular: true,
+  },
+  {
+    id: 'pandora',
+    name: 'Pandora',
+    category: 'Global Streaming',
+    tier: 'Free with Ads / Premium',
+    badge: 'Music Genome',
+    color: '#3664F4',
+    description: 'The Music Genome Project: sophisticated automated music recommendation and personalized radio.',
+    getUrl: (q) => `https://www.pandora.com/search/${encodeQuery(q)}/all`,
+    directHomeUrl: 'https://www.pandora.com/',
+  },
+  {
+    id: 'iheartradio',
+    name: 'iHeartRadio',
+    category: 'Global Streaming',
+    tier: 'Free with Ads / Premium',
+    badge: 'Live Broadcasts',
+    color: '#C60000',
+    description: 'Thousands of real broadcast radio stations from across North America and custom artist radio.',
+    getUrl: (q) => `https://www.iheart.com/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.iheart.com/',
+  },
+
+  // --- B. Indie, Electronic & Artist-Direct ---
+  {
+    id: 'bandcamp',
+    name: 'Bandcamp',
+    category: 'Indie & Artist Direct',
+    tier: 'Artist Direct',
+    badge: 'Direct to Artist',
+    color: '#629AA9',
+    description: 'Direct music discovery platform where fans directly fund independent artists and buy physical vinyl/merch.',
+    getUrl: (q) => `https://bandcamp.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://bandcamp.com/',
+    isPopular: true,
+  },
+  {
+    id: 'audiomack',
+    name: 'Audiomack',
+    category: 'Indie & Artist Direct',
+    tier: 'Free with Ads / Premium',
+    badge: 'Free Streaming & DL',
+    color: '#FFA200',
+    description: 'Free, unlimited music streaming and offline listening for hip-hop, electronic, and rising indie talent.',
+    getUrl: (q) => `https://audiomack.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://audiomack.com/',
+  },
+  {
+    id: 'mixcloud',
+    name: 'Mixcloud',
+    category: 'Indie & Artist Direct',
+    tier: 'Free with Ads / Premium',
+    badge: 'DJ Sets & Podcasts',
+    color: '#5000FF',
+    description: 'Home for radio shows, DJ mix sets, podcast episodes, and club culture selectors.',
+    getUrl: (q) => `https://www.mixcloud.com/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.mixcloud.com/',
+  },
+  {
+    id: 'beatport',
+    name: 'Beatport',
+    category: 'Indie & Artist Direct',
+    tier: 'Artist Direct',
+    badge: 'Electronic / Club',
+    color: '#01FF95',
+    description: 'The world premier online music store and streaming catalogue for electronic club DJs and producers.',
+    getUrl: (q) => `https://www.beatport.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.beatport.com/',
+  },
+  {
+    id: 'traxsource',
+    name: 'Traxsource',
+    category: 'Indie & Artist Direct',
+    tier: 'Artist Direct',
+    badge: 'Underground House',
+    color: '#1B98E0',
+    description: 'Modern house music, deep techno, afro house, and underground club cuts.',
+    getUrl: (q) => `https://www.traxsource.com/search?term=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.traxsource.com/',
+  },
+
+  // --- C. Live Global Radio & Ambient Stations ---
+  {
+    id: 'radio-garden',
+    name: 'Radio Garden (3D Earth Globe)',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'Explore 3D Globe',
+    color: '#00E676',
+    description: 'Explore and tune into 30,000+ live broadcast radio stations worldwide on an interactive 3D globe.',
+    getUrl: (q) => `https://radio.garden/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://radio.garden/',
+    isPopular: true,
+  },
+  {
+    id: 'somafm',
+    name: 'SomaFM Commercial-Free Radio',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'Listener Supported',
+    color: '#E040FB',
+    description: 'Over 30 unique channels of underground ambient, chill, indie, and electronic radio broadcast from SF.',
+    getUrl: (_q) => `https://somafm.com/`,
+    directHomeUrl: 'https://somafm.com/',
+    isPopular: true,
+  },
+  {
+    id: 'tunein',
+    name: 'TuneIn Radio',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: '100,000+ Stations',
+    color: '#1D2026',
+    description: 'Real live radio from around the globe: live sports, breaking news, talk, and music genres.',
+    getUrl: (q) => `https://tunein.com/search/?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://tunein.com/',
+  },
+  {
+    id: 'lofigirl',
+    name: 'Lofi Girl 24/7 Live Stream',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: '24/7 Focus Beats',
+    color: '#FFB300',
+    description: 'The world most iconic 24/7 continuous stream of peaceful lo-fi beats to relax and study to.',
+    getUrl: (_q) => `https://www.youtube.com/watch?v=jfKfPfyJRdk`,
+    directHomeUrl: 'https://lofigirl.com/',
+    isPopular: true,
+  },
+  {
+    id: 'accuradio',
+    name: 'AccuRadio',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: '1,000+ Free Channels',
+    color: '#00838F',
+    description: '100% free customizable internet radio with over 1,400 curated channels and unlimited skips.',
+    getUrl: (q) => `https://www.accuradio.com/search/${encodeQuery(q)}/`,
+    directHomeUrl: 'https://www.accuradio.com/',
+  },
+  {
+    id: 'di-fm',
+    name: 'DI.FM (Digitally Imported)',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'Electronic Streams',
+    color: '#00B0FF',
+    description: '90+ curated electronic music channels streaming trance, techno, ambient, and drum and bass.',
+    getUrl: (q) => `https://www.di.fm/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.di.fm/',
+  },
+  {
+    id: 'nts-radio',
+    name: 'NTS Radio',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'Underground 24/7',
+    color: '#000000',
+    description: 'Cult global online radio broadcasting underground electronic, jazz, ambient, and avant-garde music.',
+    getUrl: (q) => `https://www.nts.live/explore?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.nts.live/',
+    isPopular: true,
+  },
+  {
+    id: 'bbc-sounds',
+    name: 'BBC Sounds',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'BBC Radio 1/6',
+    color: '#F54997',
+    description: 'Listen live to BBC Radio 1, 1Xtra, 6 Music, world-class podcasts, and Essential Mixes.',
+    getUrl: (q) => `https://www.bbc.co.uk/sounds/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.bbc.co.uk/sounds',
+  },
+  {
+    id: 'kexp',
+    name: 'KEXP Seattle Live',
+    category: 'Live Radio & Ambient',
+    tier: 'Global Radio',
+    badge: 'Legendary Sessions',
+    color: '#F48024',
+    description: 'Listener-supported radio famous for world-class live in-studio artist sessions and indie curation.',
+    getUrl: (q) => `https://www.kexp.org/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.kexp.org/',
+    isPopular: true,
+  },
+
+  // --- D. Lyrics, Metadata & Community ---
+  {
+    id: 'genius',
+    name: 'Genius (Lyrics & Annotations)',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Verified Annotations',
+    color: '#FFFF64',
+    description: 'The world biggest collection of song lyrics, verified artist explanations, and musical knowledge.',
+    getUrl: (q) => `https://genius.com/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://genius.com/',
+    isPopular: true,
+  },
+  {
+    id: 'musixmatch',
+    name: 'Musixmatch',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Synced Lyrics',
+    color: '#FF5959',
+    description: 'Synchronized real-time song lyrics translated across 60+ international languages.',
+    getUrl: (q) => `https://www.musixmatch.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.musixmatch.com/',
+  },
+  {
+    id: 'last-fm',
+    name: 'Last.fm',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Scrobbler & Charts',
+    color: '#D51007',
+    description: 'Automatic music tracking across services, personal listening history stats, and global charts.',
+    getUrl: (q) => `https://www.last.fm/search?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.last.fm/',
+    isPopular: true,
+  },
+  {
+    id: 'discogs',
+    name: 'Discogs',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Discography Database',
+    color: '#333333',
+    description: 'Comprehensive physical audio database: vinyl releases, matrix runouts, and producer credits.',
+    getUrl: (q) => `https://www.discogs.com/search/?q=${encodeQuery(q)}&type=all`,
+    directHomeUrl: 'https://www.discogs.com/',
+  },
+  {
+    id: 'rate-your-music',
+    name: 'Rate Your Music (RYM)',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Critical Community',
+    color: '#24567A',
+    description: 'Acclaimed music database with community reviews, release ratings, and genre taxonomy.',
+    getUrl: (q) => `https://rateyourmusic.com/search?searchterm=${encodeQuery(q)}&type=l`,
+    directHomeUrl: 'https://rateyourmusic.com/',
+  },
+  {
+    id: 'shazam',
+    name: 'Shazam',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Audio Recognition',
+    color: '#0088FF',
+    description: 'Identify songs playing around you instantly and discover trending charts globally.',
+    getUrl: (q) => `https://www.shazam.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.shazam.com/',
+  },
+  {
+    id: 'songkick',
+    name: 'Songkick Live Concerts',
+    category: 'Lyrics & Community',
+    tier: 'Lyrics & Community',
+    badge: 'Live Tours & Gigs',
+    color: '#F80046',
+    description: 'Track your favorite artists and never miss a live concert, world tour, or festival date globally.',
+    getUrl: (q) => `https://www.songkick.com/search?query=${encodeQuery(q)}&type=upcoming`,
+    directHomeUrl: 'https://www.songkick.com/',
+  },
+
+  // --- E. Free & Open Public Archives ---
+  {
+    id: 'free-music-archive',
+    name: 'Free Music Archive (FMA)',
+    category: 'Free & Open Archives',
+    tier: 'Public Domain',
+    badge: 'Creative Commons',
+    color: '#4A90E2',
+    description: 'Curated high-quality, legal audio downloads directed by WFMU for creators and listeners.',
+    getUrl: (q) => `https://freemusicarchive.org/search?quicksearch=${encodeQuery(q)}`,
+    directHomeUrl: 'https://freemusicarchive.org/',
+    isPopular: true,
+  },
+  {
+    id: 'archive-live-music',
+    name: 'Internet Archive Live Music Hub',
+    category: 'Free & Open Archives',
+    tier: 'Public Domain',
+    badge: '250,000+ Concerts',
+    color: '#27AE60',
+    description: 'Over a quarter-million free high-definition soundboard recordings of live concerts (Grateful Dead, Smashing Pumpkins).',
+    getUrl: (q) => `https://archive.org/details/etree?query=${encodeQuery(q)}`,
+    directHomeUrl: 'https://archive.org/details/etree',
+  },
+  {
+    id: 'jamendo',
+    name: 'Jamendo Music',
+    category: 'Free & Open Archives',
+    tier: 'Public Domain',
+    badge: 'Free Independent Music',
+    color: '#FF0077',
+    description: 'Free streaming and free downloads of independent music under Creative Commons licenses.',
+    getUrl: (q) => `https://www.jamendo.com/search?qs=q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.jamendo.com/',
+  },
+  {
+    id: 'musopen',
+    name: 'Musopen Free Classical',
+    category: 'Free & Open Archives',
+    tier: 'Public Domain',
+    badge: 'Public Domain Classical',
+    color: '#2C3E50',
+    description: 'Royalty-free public domain classical recordings (Bach, Beethoven, Chopin) and sheet music.',
+    getUrl: (q) => `https://musopen.org/music/search/?q=${encodeQuery(q)}`,
+    directHomeUrl: 'https://musopen.org/',
+  },
+
+  // --- F. Indian & South Asian Music Giants ---
+  {
+    id: 'jiosaavn',
+    name: 'JioSaavn',
+    category: 'Indian & Regional Music',
+    tier: 'Free with Ads / Premium',
+    badge: '16+ Indian Languages',
+    color: '#00B17B',
+    description: 'Over 80 million tracks in Bollywood Hindi, Punjabi, Tamil, Telugu, and international pop.',
+    getUrl: (q) => `https://www.jiosaavn.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://www.jiosaavn.com/',
+    isPopular: true,
+  },
+  {
+    id: 'wynk',
+    name: 'Wynk Music',
+    category: 'Indian & Regional Music',
+    tier: 'Free with Ads / Premium',
+    badge: 'Airtel Music',
+    color: '#0099FF',
+    description: 'Stream Bollywood songs, regional regional melodies, and international hits with HD audio.',
+    getUrl: (q) => `https://wynk.in/music/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://wynk.in/',
+  },
+  {
+    id: 'gaana',
+    name: 'Gaana',
+    category: 'Indian & Regional Music',
+    tier: 'Free with Ads / Premium',
+    badge: 'Top Hindi & Regional',
+    color: '#E72C30',
+    description: 'India largest commercial music broadcaster featuring non-stop playlists and radio.',
+    getUrl: (q) => `https://gaana.com/search/${encodeQuery(q)}`,
+    directHomeUrl: 'https://gaana.com/',
+  },
+];
+
+// Helper to filter music platforms
+export const getFilteredMusicPlatforms = (category: string = 'All') => {
+  if (category === 'All') return ALL_MUSIC_PLATFORMS;
+  return ALL_MUSIC_PLATFORMS.filter((p) => p.category === category);
+};
+
+// Legacy backwards-compatible helpers
+export const getFilmSearchLinks = (titleOrQuery: string) => {
+  return ALL_FILM_PLATFORMS.slice(0, 12).map((p) => ({
+    label: p.name,
+    url: p.getUrl(titleOrQuery),
+    category: p.category,
+    note: p.description,
+    badge: p.badge,
+    isPrimary: p.id === 'youtube' || p.id === 'justwatch',
+  }));
+};
+
+export const getMusicSearchLinks = (trackOrArtist: string) => {
+  return ALL_MUSIC_PLATFORMS.slice(0, 12).map((p) => ({
+    platform: p.name,
+    url: p.getUrl(trackOrArtist),
+    color: p.color,
+    description: p.description,
+  }));
+};
+
+// 3. Books & Research Scholarly Links
 export const getAcademicSearchLinks = (topicOrTitle: string) => {
   const q = encodeQuery(topicOrTitle);
   return [
@@ -102,70 +1175,18 @@ export const getAcademicSearchLinks = (topicOrTitle: string) => {
     {
       label: 'Open Library',
       url: `https://openlibrary.org/search?q=${q}`,
-      description: 'Universal editable book catalog and lending library records',
-      badge: 'Catalog',
-    },
-    {
-      label: 'PubMed (Biomedical)',
-      url: `https://pubmed.ncbi.nlm.nih.gov/?term=${q}`,
-      description: 'Biomedical literature, MEDLINE, life science journals',
-      badge: 'Medicine',
-    },
-    {
-      label: 'Internet Archive Books',
-      url: `https://archive.org/search?query=${q}&and%5B%5D=mediatype%3A%22texts%22`,
-      description: 'Digitized historical books, primary documents, and archives',
-      badge: 'Archive',
+      description: 'Millions of scanned books and catalog records by Internet Archive',
+      badge: 'Open Archive',
     },
   ];
 };
 
-// 3. Music & Soundtrack Discovery Links
-export const getMusicSearchLinks = (trackOrArtist: string) => {
-  const q = encodeQuery(trackOrArtist);
-  return [
-    {
-      platform: 'YouTube',
-      url: `https://www.youtube.com/results?search_query=${q}`,
-      color: '#FF0000',
-      description: 'Official audio, music videos, live performances',
-    },
-    {
-      platform: 'Spotify',
-      url: `https://open.spotify.com/search/${q}`,
-      color: '#1DB954',
-      description: 'Official studio tracks, artist profile, albums',
-    },
-    {
-      platform: 'YouTube Music',
-      url: `https://music.youtube.com/search?q=${q}`,
-      color: '#FF0000',
-      description: 'Album releases, user mixes, soundtrack cuts',
-    },
-    {
-      platform: 'Apple Music',
-      url: `https://music.apple.com/us/search?term=${q}`,
-      color: '#FA2D48',
-      description: 'Lossless catalog, liner notes, composer credits',
-    },
-    {
-      platform: 'SoundCloud',
-      url: `https://soundcloud.com/search?q=${q}`,
-      color: '#FF5500',
-      description: 'Indie tracks, unofficial remixes, creator uploads',
-    },
-    {
-      platform: 'Bandcamp',
-      url: `https://bandcamp.com/search?q=${q}`,
-      color: '#629aa9',
-      description: 'Independent artists, physical vinyl, direct support',
-    },
-  ];
+export const createGoogleSearchUrl = (query: string): string => {
+  return `https://www.google.com/search?q=${encodeQuery(query)}`;
 };
 
-// 4. Advanced Search Operator Query Generator
 export interface OperatorParams {
-  topic: string;
+  topic?: string;
   exactPhrase?: string;
   filetype?: string;
   site?: string;
@@ -177,42 +1198,38 @@ export interface OperatorParams {
 export const buildSearchOperatorQuery = (params: OperatorParams): string => {
   const parts: string[] = [];
 
-  const main = params.topic.trim();
-  if (main) {
-    parts.push(main);
+  if (params.topic?.trim()) {
+    parts.push(params.topic.trim());
   }
 
-  if (params.exactPhrase && params.exactPhrase.trim()) {
+  if (params.exactPhrase?.trim()) {
     parts.push(`"${params.exactPhrase.trim()}"`);
   }
 
-  if (params.filetype && params.filetype.trim()) {
-    parts.push(`filetype:${params.filetype.trim().toLowerCase()}`);
+  if (params.inTitle?.trim()) {
+    parts.push(`intitle:${params.inTitle.trim()}`);
   }
 
-  if (params.site && params.site.trim()) {
-    parts.push(`site:${params.site.trim().toLowerCase()}`);
+  if (params.site?.trim()) {
+    parts.push(`site:${params.site.trim()}`);
   }
 
-  if (params.inTitle && params.inTitle.trim()) {
-    parts.push(`intitle:"${params.inTitle.trim()}"`);
+  if (params.filetype?.trim()) {
+    parts.push(`filetype:${params.filetype.trim()}`);
   }
 
-  if (params.excludeTerms && params.excludeTerms.trim()) {
-    const rawExcludes = params.excludeTerms.split(/[, ]+/).filter(Boolean);
-    rawExcludes.forEach((term) => {
-      const clean = term.startsWith('-') ? term : `-${term}`;
-      parts.push(clean);
-    });
+  if (params.excludeTerms?.trim()) {
+    const terms = params.excludeTerms
+      .split(/[\s,]+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+    terms.forEach((t) => parts.push(`-${t}`));
   }
 
   if (params.publicDomainOnly) {
-    parts.push('("public domain" OR "creative commons" OR "open access")');
+    parts.push('"public domain"');
   }
 
-  return parts.join(' ');
+  return parts.join(' ').trim();
 };
 
-export const createGoogleSearchUrl = (query: string): string => {
-  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-};

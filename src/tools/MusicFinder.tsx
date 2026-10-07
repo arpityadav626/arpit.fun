@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getMusicSearchLinks } from '../lib/searchLinks';
+import { ALL_MUSIC_PLATFORMS } from '../lib/searchLinks';
 import { saveHistoryItem } from '../lib/history';
 import { soundEngine } from '../lib/audioSynth';
 import {
@@ -11,8 +11,9 @@ import {
   Music2,
   Headphones,
   Volume2,
-  Disc,
   X,
+  Globe,
+  Sparkles,
 } from 'lucide-react';
 
 interface AmbientStation {
@@ -107,29 +108,61 @@ const AMBIENT_STATIONS: AmbientStation[] = [
   },
 ];
 
+const MUSIC_CATEGORIES = [
+  'All',
+  'Global Streaming',
+  'Indie & Artist Direct',
+  'Live Radio & Ambient',
+  'Lyrics & Community',
+  'Free & Open Archives',
+  'Indian & Regional Music',
+] as const;
+
 export const MusicFinder: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [activeTab, setActiveTab] = useState<'stations' | 'search'>('stations');
+  const [musicViewTab, setMusicViewTab] = useState<'omniverse' | 'ambient'>('omniverse');
+  const [selectedMusicCategory, setSelectedMusicCategory] = useState<string>('All');
+  const [selectedStationCategory, setSelectedStationCategory] = useState<string>('All');
   const [activeStation, setActiveStation] = useState<AmbientStation | null>(null);
 
+  // Filter 38+ Global Music Platforms
+  const filteredMusicPlatforms = useMemo(() => {
+    if (selectedMusicCategory === 'All') return ALL_MUSIC_PLATFORMS;
+    return ALL_MUSIC_PLATFORMS.filter((p) => p.category === selectedMusicCategory);
+  }, [selectedMusicCategory]);
+
+  // Filter Ambient Radio Stations
   const filteredStations = useMemo(() => {
-    if (selectedCategory === 'All') return AMBIENT_STATIONS;
-    return AMBIENT_STATIONS.filter((s) => s.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedStationCategory === 'All') return AMBIENT_STATIONS;
+    return AMBIENT_STATIONS.filter((s) => s.category === selectedStationCategory);
+  }, [selectedStationCategory]);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const clean = query.trim();
     if (!clean) return;
-    setActiveTab('search');
-    saveHistoryItem('music', 'Music & Soundtrack Search', clean);
+    setMusicViewTab('omniverse');
+    saveHistoryItem('music', 'Global Audio Omniverse', clean);
     soundEngine.playSearchPulse();
   };
 
-  const searchLinks = query.trim() ? getMusicSearchLinks(query.trim()) : [];
-  const quickGenres = ['Hans Zimmer', 'Lofi Beats', 'Synthwave', 'Ludovico Einaudi', 'Interstellar OST'];
-  const categories = ['All', 'Lo-Fi & Study', 'Cinematic OST', 'Synthwave', 'Classical & Piano', 'Space Ambient'];
+  const quickGenres = [
+    'Hans Zimmer',
+    'A.R. Rahman',
+    'Lofi Girl Beats',
+    'Daft Punk',
+    'Ludovico Einaudi',
+    'Interstellar OST',
+  ];
+
+  const ambientCategories = [
+    'All',
+    'Lo-Fi & Study',
+    'Cinematic OST',
+    'Synthwave',
+    'Classical & Piano',
+    'Space Ambient',
+  ];
 
   return (
     <div className="relative flex flex-col h-full space-y-5 text-zinc-100">
@@ -145,14 +178,17 @@ export const MusicFinder: React.FC = () => {
             <Radio className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white tracking-wide flex items-center gap-2">
-              Soundtracks & 24/7 Ambient Stations
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                1-Click Direct Play
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-white tracking-wide">
+                Global Music, Hi-Res & Audio Omniverse
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-violet-500/15 text-violet-300 border border-violet-500/30 font-semibold inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                {ALL_MUSIC_PLATFORMS.length}+ Global Platforms
               </span>
-            </h3>
+            </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Live in-app YouTube streams, Spotify stations, and multi-platform soundtrack search.
+              1-click deep audio search across Hi-Res FLAC, Indie Direct, 3D Globe Radio, Lyrics, Free Archives & Indian Streaming.
             </p>
           </div>
         </div>
@@ -189,9 +225,9 @@ export const MusicFinder: React.FC = () => {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            if (e.target.value.trim()) setActiveTab('search');
+            if (e.target.value.trim()) setMusicViewTab('omniverse');
           }}
-          placeholder="Search any artist, film soundtrack, synthwave album, or composer..."
+          placeholder={`Search any artist, song, soundtrack, or composer across ${ALL_MUSIC_PLATFORMS.length}+ audio platforms...`}
           className="w-full pl-11 pr-28 py-3 text-sm rounded-2xl bg-zinc-900/90 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all shadow-inner"
         />
         <Search className="w-4 h-4 text-zinc-500 absolute left-4 pointer-events-none" />
@@ -199,12 +235,35 @@ export const MusicFinder: React.FC = () => {
         <button
           type="submit"
           disabled={!query.trim()}
-          className="absolute right-2 px-4 py-1.5 text-xs font-medium rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+          className="absolute right-2 px-4 py-1.5 text-xs font-semibold rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
         >
           <Music2 className="w-3.5 h-3.5 text-violet-600" />
-          <span>Search Channels</span>
+          <span>Dispatch Search</span>
         </button>
       </motion.form>
+
+      {/* Quick Picks */}
+      <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+        <span className="flex items-center gap-1 text-zinc-400">
+          <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+          Trending Worldwide:
+        </span>
+        {quickGenres.map((g) => (
+          <button
+            key={g}
+            type="button"
+            onClick={() => {
+              setQuery(g);
+              setMusicViewTab('omniverse');
+              saveHistoryItem('music', 'Global Audio Omniverse', g);
+              soundEngine.playKeyClick();
+            }}
+            className="px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono"
+          >
+            {g}
+          </button>
+        ))}
+      </div>
 
       {/* 3. In-App Live Ambient Player */}
       <AnimatePresence>
@@ -221,7 +280,7 @@ export const MusicFinder: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                 <span className="font-mono text-xs uppercase tracking-wider text-violet-400 font-bold">
-                  Now Playing Live
+                  Now Playing In-App Live
                 </span>
                 <span className="text-zinc-600">•</span>
                 <span className="font-semibold text-sm text-white">
@@ -295,71 +354,181 @@ export const MusicFinder: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 4. Navigation Controls & Quick Genres */}
+      {/* 4. Tab Switcher: Global Audio Omniverse vs Curated Radios */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('stations')}
-            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'stations'
-                ? 'bg-violet-500 text-white font-semibold shadow-xs'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            <Radio className="w-3 h-3" />
-            <span>Curated Radios ({AMBIENT_STATIONS.length})</span>
-          </button>
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-zinc-900 border border-zinc-800 text-xs">
           <button
             type="button"
             onClick={() => {
-              if (query.trim()) setActiveTab('search');
+              soundEngine.playKeyClick();
+              setMusicViewTab('omniverse');
             }}
-            disabled={!query.trim()}
-            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'search'
-                ? 'bg-white text-zinc-950 font-semibold shadow-xs'
-                : 'text-zinc-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed'
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+              musicViewTab === 'omniverse'
+                ? 'bg-violet-600 text-white font-bold shadow-xs'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Disc className="w-3 h-3" />
-            <span>Direct Audio Networks</span>
+            <Globe className="w-3.5 h-3.5" />
+            <span>Global Audio Omniverse ({ALL_MUSIC_PLATFORMS.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playKeyClick();
+              setMusicViewTab('ambient');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+              musicViewTab === 'ambient'
+                ? 'bg-violet-600 text-white font-bold shadow-xs'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>24/7 Live Radios & Ambient ({AMBIENT_STATIONS.length})</span>
           </button>
         </div>
 
-        {/* Quick Picks */}
-        <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
-          <span>Popular:</span>
-          {quickGenres.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => {
-                setQuery(g);
-                setActiveTab('search');
-                saveHistoryItem('music', 'Music & Soundtrack Search', g);
-              }}
-              className="px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
-            >
-              {g}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+          <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+          <span>{filteredMusicPlatforms.length} audio services indexed</span>
         </div>
       </div>
 
-      {/* 5. TAB: Curated Ambient Radios */}
-      {activeTab === 'stations' && (
+      {/* 5. TAB A: Global Audio Omniverse (38+ Platforms) */}
+      {musicViewTab === 'omniverse' && (
         <div className="space-y-4">
-          {/* Category Chips */}
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono scrollbar-none">
+            {MUSIC_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  soundEngine.playKeyClick();
+                  setSelectedMusicCategory(cat);
+                }}
+                className={`px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  selectedMusicCategory === cat
+                    ? 'bg-violet-600 text-white font-bold shadow-xs'
+                    : 'bg-zinc-900/80 text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Search Banner if Query Present */}
+          {query.trim() && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3.5 rounded-2xl bg-violet-950/30 border border-violet-500/30 flex items-center justify-between gap-3 text-xs"
+            >
+              <div className="flex items-center gap-2">
+                <Music2 className="w-4 h-4 text-violet-400 shrink-0" />
+                <span className="text-zinc-300">
+                  Ready to dispatch deep search for{' '}
+                  <span className="text-white font-bold font-mono">"{query.trim()}"</span> across all platforms:
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-zinc-400 hover:text-white text-xs underline cursor-pointer"
+              >
+                Clear
+              </button>
+            </motion.div>
+          )}
+
+          {/* Staggered Omniverse Music Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[580px] overflow-y-auto pr-1">
+            <AnimatePresence mode="popLayout">
+              {filteredMusicPlatforms.map((platform, idx) => (
+                <motion.div
+                  key={platform.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, delay: idx * 0.02 }}
+                  whileHover={{ y: -3 }}
+                  className="group flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-violet-500/50 hover:bg-zinc-850/80 transition-all space-y-3 shadow-md"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700/60 truncate">
+                        {platform.category}
+                      </span>
+                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-violet-950/40 text-violet-300 border border-violet-800/40 font-semibold shrink-0">
+                        {platform.badge}
+                      </span>
+                    </div>
+
+                    <h4 className="font-semibold text-sm text-white group-hover:text-violet-300 transition-colors flex items-center gap-1.5">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: platform.color }}
+                      />
+                      <span className="truncate">{platform.name}</span>
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                      {platform.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                    <motion.a
+                      whileTap={{ scale: 0.96 }}
+                      href={query.trim() ? platform.getUrl(query) : platform.directHomeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundEngine.playKeyClick()}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-violet-600/20 hover:bg-violet-600 text-violet-200 hover:text-white border border-violet-500/30 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    >
+                      <span>
+                        {query.trim()
+                          ? `Search on ${platform.name.split(' ')[0]}`
+                          : `Explore ${platform.name.split(' ')[0]}`}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </motion.a>
+
+                    <a
+                      href={platform.directHomeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      title={`Visit ${platform.name} Homepage`}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* 6. TAB B: Curated 24/7 Live Ambient Radios */}
+      {musicViewTab === 'ambient' && (
+        <div className="space-y-4">
+          {/* Ambient Category Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-            {categories.map((c) => (
+            {ambientCategories.map((c) => (
               <button
                 key={c}
                 type="button"
-                onClick={() => setSelectedCategory(c)}
+                onClick={() => {
+                  soundEngine.playKeyClick();
+                  setSelectedStationCategory(c);
+                }}
                 className={`px-3 py-1 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === c
-                    ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40 font-medium'
+                  selectedStationCategory === c
+                    ? 'bg-violet-600/20 text-violet-300 border border-violet-500/40 font-medium'
                     : 'bg-zinc-900/80 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -369,138 +538,76 @@ export const MusicFinder: React.FC = () => {
           </div>
 
           {/* Cards Grid */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-1"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.05 },
-              },
-            }}
-          >
-            {filteredStations.map((station) => (
-              <motion.div
-                key={station.id}
-                variants={{
-                  hidden: { opacity: 0, y: 12 },
-                  visible: { opacity: 1, y: 0 },
-                }}
-                className="group flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-violet-500/50 hover:bg-zinc-850/80 transition-all shadow-md relative overflow-hidden"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-violet-500/10 text-violet-300 border border-violet-500/20">
-                      {station.category}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-red-500/15 text-red-400 border border-red-500/20">
-                      {station.badge}
-                    </span>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[560px] overflow-y-auto pr-1">
+            <AnimatePresence mode="popLayout">
+              {filteredStations.map((station, idx) => (
+                <motion.div
+                  key={station.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, delay: idx * 0.03 }}
+                  className="group flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-violet-500/50 hover:bg-zinc-850/80 transition-all shadow-md relative overflow-hidden space-y-3"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-violet-500/10 text-violet-300 border border-violet-500/20">
+                        {station.category}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-red-500/15 text-red-400 border border-red-500/20">
+                        {station.badge}
+                      </span>
+                    </div>
 
-                  <h4 className="font-semibold text-sm text-white group-hover:text-violet-300 transition-colors">
-                    {station.name}
-                  </h4>
-                  <p className="text-xs text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
-                    {station.description}
-                  </p>
-                </div>
-
-                <div className="pt-3 mt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    type="button"
-                    onClick={() => {
-                      soundEngine.playKeyClick();
-                      setActiveStation(station);
-                    }}
-                    className="flex-1 py-1.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Listen In-App ▶</span>
-                  </motion.button>
-
-                  <a
-                    href={station.youtubeWatchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => soundEngine.playKeyClick()}
-                    className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                    title="Open on YouTube"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <a
-                    href={station.spotifyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => soundEngine.playKeyClick()}
-                    className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-emerald-400 hover:text-white transition-colors cursor-pointer"
-                    title="Open in Spotify"
-                  >
-                    <Headphones className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      )}
-
-      {/* 6. TAB: Multi-Platform Music Search */}
-      {activeTab === 'search' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
-              Instant Dispatch Channels for "{query.trim() || 'All Audio'}"
-            </span>
-            <button
-              type="button"
-              onClick={() => setActiveTab('stations')}
-              className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
-            >
-              ← Back to Ambient Radios
-            </button>
-          </div>
-
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-            }}
-          >
-            {searchLinks.map((link) => (
-              <motion.a
-                key={link.platform}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
-                className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-violet-500/50 hover:bg-zinc-850/80 transition-all cursor-pointer shadow-md"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                      {link.platform}
+                    <h4 className="font-semibold text-sm text-white group-hover:text-violet-300 transition-colors">
+                      {station.name}
                     </h4>
+                    <p className="text-xs text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
+                      {station.description}
+                    </p>
                   </div>
-                  <p className="text-xs text-zinc-400 line-clamp-1 mt-1">
-                    {link.description}
-                  </p>
-                </div>
-                <div className="p-2 rounded-xl bg-zinc-800/80 group-hover:bg-violet-500/20 text-zinc-400 group-hover:text-violet-300 transition-colors shrink-0 ml-2">
-                  <ExternalLink className="w-4 h-4" />
-                </div>
-              </motion.a>
-            ))}
-          </motion.div>
+
+                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.96 }}
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playKeyClick();
+                        setActiveStation(station);
+                      }}
+                      className="flex-1 py-1.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Listen In-App ▶</span>
+                    </motion.button>
+
+                    <a
+                      href={station.youtubeWatchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundEngine.playKeyClick()}
+                      className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      title="Open on YouTube"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+
+                    <a
+                      href={station.spotifyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundEngine.playKeyClick()}
+                      className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-emerald-400 hover:text-white transition-colors cursor-pointer"
+                      title="Open in Spotify"
+                    >
+                      <Headphones className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
       )}
     </div>
