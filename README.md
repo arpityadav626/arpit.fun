@@ -1,48 +1,67 @@
 # AI HUB ✲ (arpit.fun)
 
-> **High-Performance 3D AI Discovery Station & Media Suite**  
-> Built with React 19, TypeScript, Three.js, Tailwind CSS v4, and Framer Motion.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Live App](https://img.shields.io/badge/Live_Platform-arpit--fun.web.app-cyan.svg)](https://arpit-fun.web.app/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Firebase Hosting](https://img.shields.io/badge/Hosted_on-Google_Firebase-FFCA28?logo=firebase)](https://arpit-fun.web.app/)
+
+> **High-Performance 3D AI Discovery Station & Global Media Omniverse**  
+> Designed and architected by **[Arpit Yadav](https://github.com/arpityadav626)**.
 
 ---
 
 ## 🌟 Overview
 
-**AI HUB** is a minimalist, luxury dark obsidian web application featuring a continuous periodic 3D helical spiral navigation system inspired by haute horlogerie and editorial aesthetics. It integrates five specialized intelligent discovery engines with direct in-app execution, zero-redirect workflows, and 2x Retina super-sampled visual rendering.
+**AI HUB (`arpit.fun`)** is a minimalist, luxury dark obsidian web application featuring a continuous periodic 3D helical spiral navigation system inspired by haute horlogerie and editorial aesthetics. It unifies five specialized intelligent discovery engines, a **Global Streaming Omniverse of 54+ film/video platforms**, and a **Global Audio Omniverse of 38+ music & radio networks** with direct in-app execution and zero-redirect workflows.
 
 ---
 
-## ✨ Features & AI Tools
+## ✨ Features & Core Engines
 
-### 1. 🌀 3D Spiral Engine (`ThreeCardsSpiral.tsx`)
+### 1. 🌀 3D Helical Spiral Engine (`ThreeCardsSpiral.tsx`)
 - Continuous closed-loop periodic helical geometry rendered with custom GLSL shaders.
 - Depth-of-Field (DoF) multi-tap Gaussian disc blur for background depth cards.
 - 2x Retina super-sampled artwork canvases (2048x1280) with 16x anisotropic filtering.
-- Effortless high-sensitivity momentum wheel scrolling and touch dragging.
+- Multi-touch, high-sensitivity momentum wheel scrolling and touch dragging.
 
-### 2. 🎬 Cinema & YouTube Hub (`FilmFinder.tsx`)
-- **In-App 4K Theater Player**: Watch verified official trailers and full public domain cinema directly in-app.
-- 100% legal, zero-piracy streaming directory (Internet Archive Cinema, JustWatch streaming availability guide, and YouTube storefront).
-- Category filters for Sci-Fi, Action, Drama, Classic, Documentary, and Animation.
+### 2. 🎬 Global Cinema & Video Streaming Omniverse (`FilmFinder.tsx`)
+- **54+ Indexed Platforms (100% Legal & Verified)**:
+  - **Free & Ad-Supported (FAST)**: YouTube Free Movies, Tubi TV (50,000+ films), Pluto TV, Plex, The Roku Channel, Crackle, Xumo Play, Popcornflix, Filmzie, Fandango at Home (Vudu Free), Kanopy (Library card), Hoopla Digital, Dailymotion.
+  - **Global Premium & Paid**: Netflix, Amazon Prime Video, Disney+, Apple TV+, Max (HBO Max), Hulu, Paramount+, Peacock, Lionsgate Play, Shudder (Horror & Thriller #1), BritBox.
+  - **Cinephile & Arthouse**: MUBI, The Criterion Channel, BFI Player, Curzon Home Cinema, IndieFlix, Curiosity Stream, Vimeo On Demand & Staff Picks.
+  - **Public Domain & Free Archives**: Internet Archive Cinema, Open Culture (1,150+ curated films), Public Domain Movies Net, Top Documentary Films, Library of Congress Film Registry.
+  - **Anime & Asian Cinema**: Crunchyroll, HIDIVE, RetroCrush, Rakuten Viki.
+  - **Indian & Regional Cinema**: JioCinema, Disney+ Hotstar, SonyLIV, ZEE5, Aha Video, Sun NXT, Hoichoi.
+  - **Meta Search & Databases**: JustWatch, Reelgood, Letterboxd, IMDb, Rotten Tomatoes, TMDb, Trakt.tv.
+- **1-Click Deep Search Dispatch**: Searching any title (e.g. *Interstellar*, *Dune*, *RRR*) transforms all platform cards into deep search query URLs.
+- **In-App 4K Cinema Theater**: Watch trailers and full public domain cinema directly in-app without third-party redirection.
 
-### 3. 🎵 Soundtracks & 24/7 Ambient Stations (`MusicFinder.tsx`)
-- **Live In-App Ambient Player**: Stream 24/7 focus channels (Lofi Girl, Nightride FM Synthwave, Hans Zimmer Cinematic Suite, Ludovico Einaudi Piano, Cyberpunk Night City, Deep Space Drone, Rainy Cafe Jazz).
-- Real-time animated audio visualizer waves with volume controls.
-- Universal music search query dispatcher across Spotify, YouTube Music, Apple Music, SoundCloud, and Bandcamp.
+### 3. 🎵 Global Audio, Hi-Res & Radio Omniverse (`MusicFinder.tsx`)
+- **38+ Global Music & Audio Networks**:
+  - **Global Streaming Giants**: Spotify, Apple Music (Lossless ALAC & Dolby Atmos), YouTube Music, Amazon Music HD, TIDAL (Hi-Res FLAC 24-bit), Deezer HiFi, Qobuz (Audiophile 192kHz), SoundCloud, Pandora, iHeartRadio.
+  - **Indie & Artist-Direct**: Bandcamp, Audiomack, Mixcloud, Beatport, Traxsource.
+  - **Live Radio & 3D Globe**: Radio Garden (Interactive 3D Earth Globe with 30,000+ live stations), SomaFM (100% commercial-free listener-supported radio), TuneIn Radio, Lofi Girl 24/7 Live, AccuRadio, DI.FM, NTS Radio, BBC Sounds, KEXP Seattle.
+  - **Lyrics, Credits & Community**: Genius (Verified annotations), Musixmatch (Synced lyrics in 80+ languages), Last.fm, Discogs, Rate Your Music (RYM), Shazam, Songkick (Live concert tours).
+  - **Free & Open Archives**: Free Music Archive (FMA), Internet Archive Live Music Archive (250,000+ live soundboard recordings), Jamendo, Musopen.
+  - **Indian & Regional Music**: JioSaavn, Wynk Music, Gaana.
+- **Live In-App Ambient Player**: 24/7 in-app streaming for Lofi Girl, Nightride FM Synthwave, Hans Zimmer Orchestral Suite, Ludovico Einaudi Piano, Cyberpunk Ambience, Deep Space Drone, and Rainy Cafe Jazz.
 
-### 4. 📚 Books & Research Finder (`BookFinder.tsx`)
-- **In-App Book Reader**: Read timeless literary masterworks (*Frankenstein*, *Pride & Prejudice*, *The Great Gatsby*, *Meditations*, *Sherlock Holmes*, *Metamorphosis*, etc.) directly inside a focused reader frame.
-- 1-click `.epub` downloads for offline Kindle reading.
-- Live search across Project Gutenberg (70,000+ public domain works) and Open Library.
+### 4. 📚 Books & Literature Intelligence (`BookFinder.tsx`)
+- **In-App Classic Reader**: Read masterworks (*Frankenstein*, *Pride & Prejudice*, *The Great Gatsby*, *Meditations*, *Sherlock Holmes*, *Metamorphosis*, etc.) directly inside a focused reader frame.
+- **1-Click Offline `.epub` Downloads**: Direct offline reading for Kindle, Apple Books, and e-readers.
+- **Federated Catalog Search**: Instant access across Project Gutenberg (70,000+ public domain works) and Open Library.
 
-### 5. ⚡ AI Summarizer & Synthesis Studio (`AISummarizer.tsx`)
+### 5. ⚡ AI Synthesis Studio (`AISummarizer.tsx`)
 - Multi-mode text synthesis: Executive Brief, Key Takeaways, Simple (ELI5), and Deep Synthesis.
-- Generative AI cloud processing (Google Gemini / Groq Llama-3) with local offline heuristic NLP fallback.
-- Real-time metrics: Word count, character count, estimated reading time, and Compression Ratio gauge.
-- 1-click Markdown export (`.md`) and concept entity hashtag extraction.
+- Dual-engine architecture: Generative AI cloud processing (Google Gemini / Groq Llama-3) with local offline heuristic NLP fallback.
+- Real-time linguistic metrics: Word count, character count, reading duration, and Compression Ratio gauge.
+- 1-Click Markdown (`.md`) export and semantic hashtag extraction.
 
-### 6. 🔍 Search Operator & Research Studio (`SearchOperators.tsx`)
+### 6. 🔍 Search Operator Studio (`SearchOperators.tsx`)
 - Surgical boolean dork builder with interactive active filter token tags.
-- 1-click research presets for Academic Theses (`.edu`), ArXiv preprints, Public Domain PDFs, and GitHub architectures.
+- 1-Click research presets for Academic Theses (`.edu`), ArXiv preprints, Public Domain PDFs, and GitHub architectures.
 - Triple-engine execution across Google Search, DuckDuckGo, and Bing.
 
 ---
@@ -54,7 +73,8 @@
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **3D Graphics**: [Three.js](https://threejs.org/) (custom GLSL shaders & procedural canvas textures)
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Audio Engine**: Custom Web Audio API synthesizer (subtle clicks, zero background humming)
+- **Audio Engine**: Custom Web Audio API synthesizer (subtle tactile clicks, zero background humming)
+- **Deployment**: [Google Firebase Hosting](https://firebase.google.com/) + [GitHub Pages](https://pages.github.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 
 ---
@@ -89,18 +109,36 @@ npm run preview
 
 ---
 
-## 🌐 Deploy to Vercel / Netlify / Google / Firebase
+## 🌐 Live Production Deployments
 
-### 1-Click Deploy on Vercel
-```bash
-npm install -g vercel
-vercel
-```
-
-### Deploy on GitHub Pages
-Push to `main` branch with GitHub Actions Vite deploy workflow.
+- **Google Cloud / Firebase Hosting**: [https://arpit-fun.web.app](https://arpit-fun.web.app)
+- **GitHub Repository**: [https://github.com/arpityadav626/arpit.fun](https://github.com/arpityadav626/arpit.fun)
+- **Personal Portfolio**: [https://arpit-portfolio-2026.web.app](https://arpit-portfolio-2026.web.app)
 
 ---
 
-## 📄 License
-MIT License. Created by [Arpit Yadav](https://github.com/arpityadav626).
+## 📜 Copyright & License
+
+This project is licensed under the **Apache License, Version 2.0** — see the [LICENSE](LICENSE) file for complete terms and legal conditions.
+
+```text
+Copyright 2026 Arpit Yadav
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+### 🛡️ Legal Protection & Attribution Terms:
+- **Attribution Required**: Anyone using, modifying, or redistributing this codebase or any part of it **must** retain this copyright notice crediting **Arpit Yadav** and include a copy of the Apache License 2.0.
+- **Trademark & Brand Protection**: This license does not grant permission to use the trade names, trademarks, service marks, or project branding of Arpit Yadav for commercial endorsement without prior written permission.
+- **Patent & Liability Grants**: Includes explicit patent grants and protects the author against liability and warranty claims ("AS-IS").
+- **State Changes**: Any modifications or derivative works made by third parties must carry prominent notices stating that the files have been modified.
