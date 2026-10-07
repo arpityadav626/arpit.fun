@@ -193,8 +193,9 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let dragVelocity = 0;
 
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    const dragMultiplierY = isTouch ? 0.018 : 0.006;
-    const dragMultiplierX = isTouch ? 0.016 : 0.008;
+    // Calibrated smooth & controlled multipliers (neither sluggish nor overly fast)
+    const dragMultiplierY = isTouch ? 0.0075 : 0.0032;
+    const dragMultiplierX = isTouch ? 0.0065 : 0.0035;
 
     const evalClosedLoop = (theta: number) => {
       // Periodic tilted 3D space curve
@@ -234,11 +235,11 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     updateSpiralPositions();
 
-    // 5. User Interaction Listeners - Highly Responsive & Sensitive
+    // 5. User Interaction Listeners - Smooth, Calibrated & Controlled
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      // 3x higher sensitivity for effortless scrolling
-      targetScroll += e.deltaY * 0.0036;
+      // Controlled smooth wheel speed
+      targetScroll += e.deltaY * 0.0018;
       dragVelocity = 0;
     };
 
@@ -259,7 +260,8 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         const deltaY = e.clientY - startPointerY;
         const moveDelta = deltaX * dragMultiplierX - deltaY * dragMultiplierY;
         targetScroll += moveDelta;
-        dragVelocity = moveDelta * 0.92;
+        // Controlled, gentle momentum release
+        dragVelocity = moveDelta * 0.45;
         startPointerX = e.clientX;
         startPointerY = e.clientY;
       }
@@ -321,18 +323,18 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let animationFrameId: number;
 
     const animate = () => {
-      // Smooth responsive interpolation for momentum
-      currentScroll += (targetScroll - currentScroll) * 0.10;
+      // Smooth, weighted interpolation for organic glide
+      currentScroll += (targetScroll - currentScroll) * 0.075;
 
-      // Kinetic inertia momentum on swipe release
-      if (!isDragging && Math.abs(dragVelocity) > 0.00008) {
+      // Kinetic inertia momentum on swipe release - smooth natural deceleration
+      if (!isDragging && Math.abs(dragVelocity) > 0.00005) {
         targetScroll += dragVelocity;
-        dragVelocity *= 0.94;
+        dragVelocity *= 0.85; // Decelerates gracefully within 300-400ms
       }
 
-      // Gentle ambient drift when idle
-      if (!isDragging && Math.abs(dragVelocity) <= 0.00008 && !reducedMotion) {
-        targetScroll += 0.0004;
+      // Very subtle ambient drift when idle
+      if (!isDragging && Math.abs(dragVelocity) <= 0.00005 && !reducedMotion) {
+        targetScroll += 0.00015;
       }
 
       // Parallax camera tilt
