@@ -48,10 +48,18 @@
   - **Indian & Regional Music**: JioSaavn, Wynk Music, Gaana.
 - **Live In-App Ambient Player**: 24/7 in-app streaming for Lofi Girl, Nightride FM Synthwave, Hans Zimmer Orchestral Suite, Ludovico Einaudi Piano, Cyberpunk Ambience, Deep Space Drone, and Rainy Cafe Jazz.
 
-### 4. 📚 Books & Literature Intelligence (`BookFinder.tsx`)
-- **In-App Classic Reader**: Read masterworks (*Frankenstein*, *Pride & Prejudice*, *The Great Gatsby*, *Meditations*, *Sherlock Holmes*, *Metamorphosis*, etc.) directly inside a focused reader frame.
+### 4. 📚 Global Books, Literature & Research Omniverse (`BookFinder.tsx`)
+- **42+ Indexed Platforms (Free, Commercial, Libraries, Academic & Regional)**:
+  - **Free & Public Domain**: Project Gutenberg (70,000+ free ebooks), Open Library (20M+ catalog), Standard Ebooks (Masterclass typography), Feedbooks, Wikisource, Internet Archive Books & Texts, ManyBooks, Planet eBook, LibriVox Free Audiobooks, Loyal Books.
+  - **Commercial Bookstores & E-Book Stores**: Amazon Kindle & Books (World #1 bookstore), Google Play Books, Apple Books, Barnes & Noble (NOOK), Rakuten Kobo Store, Bookshop.org (Supporting local indie bookstores), Smashwords (Indie author free ebooks), Audible (Amazon audiobooks), Everand (Scribd), Audiobooks.com.
+  - **Library Card Free Borrowing & Global Catalogs**: Libby by OverDrive (Borrow ebooks & audiobooks with local library card), Hoopla Digital Books (Zero waitlists), WorldCat (World largest catalog of 10,000+ libraries), Europeana Heritage Library, Digital Public Library of America (DPLA).
+  - **Academic, Research & Scholarly Preprints**: Google Scholar, arXiv.org Repository (Cornell University), JSTOR, Directory of Open Access Books (DOAB 70,000+ scholarly books), NCBI Bookshelf / PubMed, OAPEN Library, CORE Scholarly Aggregator, ResearchGate.
+  - **Reading Communities, Ratings & Discussion**: Goodreads (World #1 reviews & shelves), The StoryGraph (Mood & pace analytics), LibraryThing, Hardcover (Privacy-focused open-source reading tracker), BookBub (Discount & free book deals).
+  - **Indian & Regional Literature**: National Digital Library of India (NDLI - Ministry of Education & IIT Kharagpur), Pratilipi (India largest digital literature community in 12+ languages), Bharatavani Knowledge Portal, Sahitya Akademi Publications.
+- **1-Click Deep Search Dispatch**: Instantly dispatches queries across all 42+ global book sources.
+- **In-App Classic Reader**: Read timeless masterworks (*Frankenstein*, *Pride & Prejudice*, *The Great Gatsby*, *Meditations*, *Sherlock Holmes*, *Metamorphosis*, etc.) directly inside a focused reader frame.
 - **1-Click Offline `.epub` Downloads**: Direct offline reading for Kindle, Apple Books, and e-readers.
-- **Federated Catalog Search**: Instant access across Project Gutenberg (70,000+ public domain works) and Open Library.
+- **Federated Live API Search**: Real-time live query integration across Project Gutenberg (Gutendex) and Open Library.
 
 ### 5. ⚡ AI Synthesis Studio (`AISummarizer.tsx`)
 - Multi-mode text synthesis: Executive Brief, Key Takeaways, Simple (ELI5), and Deep Synthesis.

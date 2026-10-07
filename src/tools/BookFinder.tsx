@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { searchOpenLibrary, getOpenLibraryCoverUrl } from '../lib/api/openLibrary';
 import { searchGutendex } from '../lib/api/gutendex';
 import { CURATED_CLASSIC_BOOKS, type CuratedBook } from '../lib/curatedBooks';
+import { ALL_BOOK_PLATFORMS } from '../lib/searchLinks';
 import { saveHistoryItem } from '../lib/history';
 import { soundEngine } from '../lib/audioSynth';
 import type { OpenLibraryDoc, GutendexBook } from '../types';
@@ -17,14 +18,29 @@ import {
   Layers,
   ArrowRight,
   X,
+  Globe,
+  Flame,
 } from 'lucide-react';
+
+const BOOK_CATEGORIES = [
+  'All',
+  'Free & Public Domain',
+  'Commercial & Retail',
+  'Library Card (Free)',
+  'Academic & Research',
+  'Community & Reviews',
+  'Indian & Regional',
+] as const;
 
 export const BookFinder: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'curated' | 'openlibrary' | 'gutendex'>('curated');
+  const [bookViewTab, setBookViewTab] = useState<'omniverse' | 'curated' | 'gutendex' | 'openlibrary'>('omniverse');
+  const [selectedBookCategory, setSelectedBookCategory] = useState<string>('All');
+  const [selectedBookTier, setSelectedBookTier] = useState<'All' | 'Free' | 'Paid' | 'Library'>('All');
   const [selectedGenre, setSelectedGenre] = useState<string>('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [activeReadingUrl, setActiveReadingUrl] = useState<{
     url: string;
     title: string;
@@ -35,53 +51,89 @@ export const BookFinder: React.FC = () => {
   const [openLibraryDocs, setOpenLibraryDocs] = useState<OpenLibraryDoc[]>([]);
   const [gutendexBooks, setGutendexBooks] = useState<GutendexBook[]>([]);
 
-  // Filter curated books by category
+  // Filter curated classic books
   const filteredCurated = useMemo(() => {
     if (selectedGenre === 'All') return CURATED_CLASSIC_BOOKS;
     return CURATED_CLASSIC_BOOKS.filter((b) => b.category === selectedGenre);
   }, [selectedGenre]);
 
-  const handleSearch = async (e?: React.FormEvent, overrideTab?: 'openlibrary' | 'gutendex') => {
+  // Filter 42+ Global Book Platforms
+  const filteredBookPlatforms = useMemo(() => {
+    return ALL_BOOK_PLATFORMS.filter((p) => {
+      const matchCat =
+        selectedBookCategory === 'All' || p.category === selectedBookCategory;
+      let matchTier = true;
+      if (selectedBookTier === 'Free') {
+        matchTier =
+          p.tier.includes('Free') ||
+          p.tier.includes('Open Access') ||
+          p.tier.includes('Public Domain');
+      } else if (selectedBookTier === 'Paid') {
+        matchTier = p.tier.includes('Commercial') || p.tier.includes('Paid');
+      } else if (selectedBookTier === 'Library') {
+        matchTier = p.tier.includes('Library Card');
+      }
+      return matchCat && matchTier;
+    });
+  }, [selectedBookCategory, selectedBookTier]);
+
+  const handleSearch = async (e?: React.FormEvent, overrideTab?: 'omniverse' | 'curated' | 'gutendex' | 'openlibrary') => {
     if (e) e.preventDefault();
     const clean = query.trim();
     if (!clean) return;
 
-    const targetTab = overrideTab || (activeTab === 'curated' ? 'gutendex' : activeTab);
-    setActiveTab(targetTab);
+    const targetTab = overrideTab || bookViewTab;
     setError(null);
-    setLoading(true);
-    saveHistoryItem('books', 'Books & Research Finder', clean);
+    saveHistoryItem('books', 'Global Book Omniverse', clean);
     soundEngine.playSearchPulse();
 
-    try {
-      if (targetTab === 'openlibrary') {
+    if (targetTab === 'openlibrary') {
+      setLoading(true);
+      try {
         const docs = await searchOpenLibrary(clean);
         setOpenLibraryDocs(docs);
         if (docs.length === 0) {
           setError('No books found on Open Library matching this query.');
         }
-      } else {
+      } catch {
+        setError('Failed to fetch Open Library records.');
+      } finally {
+        setLoading(false);
+      }
+    } else if (targetTab === 'gutendex') {
+      setLoading(true);
+      try {
         const books = await searchGutendex(clean);
         setGutendexBooks(books);
         if (books.length === 0) {
           setError('No public-domain works found on Project Gutenberg.');
         }
+      } catch {
+        setError('Failed to fetch Gutenberg records.');
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError('Failed to fetch book results. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleTabChange = (tab: 'curated' | 'openlibrary' | 'gutendex') => {
-    setActiveTab(tab);
-    if (tab !== 'curated' && query.trim()) {
+  const handleTabChange = (tab: 'omniverse' | 'curated' | 'gutendex' | 'openlibrary') => {
+    setBookViewTab(tab);
+    soundEngine.playKeyClick();
+    if ((tab === 'gutendex' || tab === 'openlibrary') && query.trim()) {
       handleSearch(undefined, tab);
     }
   };
 
-  const quickPicks = ['Frankenstein', 'Dune', 'Marcus Aurelius', 'Sherlock Holmes', 'Quantum Physics'];
+  const quickPicks = [
+    'Frankenstein',
+    'Atomic Habits',
+    'Meditations',
+    'Dune',
+    'Sapiens',
+    'Sherlock Holmes',
+    'Bhagavad Gita',
+  ];
+
   const genres = ['All', 'Sci-Fi & Horror', 'Philosophy', 'Mystery', 'Classic Literature', 'Drama'];
 
   return (
@@ -94,27 +146,31 @@ export const BookFinder: React.FC = () => {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 shadow-md backdrop-blur-md"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
             <Library className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white tracking-wide flex items-center gap-2">
-              Free Public Domain Literature & Research
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                100% Free & Legal
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-white tracking-wide">
+                Global Books, Literature & Research Omniverse
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {ALL_BOOK_PLATFORMS.length}+ Global Platforms
               </span>
-            </h3>
+            </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Read classic masterworks directly in your browser or download EPUBs from Project Gutenberg & Open Library.
+              1-click deep book search across Free Public Domain, Kindle, Google Books, Libraries, Academic Preprints & Reviews.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-xs flex-wrap">
           <a
             href="https://www.gutenberg.org"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => soundEngine.playKeyClick()}
             className="px-2.5 py-1 rounded-lg bg-zinc-800/70 border border-zinc-700/60 text-zinc-300 hover:text-white hover:border-emerald-500/40 transition-colors flex items-center gap-1.5"
           >
             <span>Gutenberg</span>
@@ -124,15 +180,26 @@ export const BookFinder: React.FC = () => {
             href="https://openlibrary.org"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => soundEngine.playKeyClick()}
             className="px-2.5 py-1 rounded-lg bg-zinc-800/70 border border-zinc-700/60 text-zinc-300 hover:text-white hover:border-cyan-500/40 transition-colors flex items-center gap-1.5"
           >
             <span>Open Library</span>
             <ExternalLink className="w-3 h-3 text-zinc-500" />
           </a>
+          <a
+            href="https://www.goodreads.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => soundEngine.playKeyClick()}
+            className="px-2.5 py-1 rounded-lg bg-zinc-800/70 border border-zinc-700/60 text-amber-300 hover:text-white transition-colors flex items-center gap-1.5"
+          >
+            <span>Goodreads</span>
+            <ExternalLink className="w-3 h-3 text-zinc-500" />
+          </a>
         </div>
       </motion.div>
 
-      {/* 2. Search Input */}
+      {/* 2. Interactive Search Form */}
       <motion.form
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -144,15 +211,15 @@ export const BookFinder: React.FC = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search author, title, topic, or philosophy (e.g. Mary Shelley, Stoicism, Gatsby)..."
-          className="w-full pl-11 pr-28 py-3 text-sm rounded-2xl bg-zinc-900/90 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all shadow-inner"
+          placeholder={`Search any book, author, philosophy, or ISBN across ${ALL_BOOK_PLATFORMS.length}+ global book platforms...`}
+          className="w-full pl-11 pr-28 py-3.5 text-sm rounded-2xl bg-zinc-900/90 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all shadow-inner font-sans"
         />
         <Search className="w-4 h-4 text-zinc-500 absolute left-4 pointer-events-none" />
 
         <button
           type="submit"
           disabled={loading || !query.trim()}
-          className="absolute right-2 px-4 py-1.5 text-xs font-medium rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+          className="absolute right-2 px-4 py-2 text-xs font-semibold rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
         >
           {loading ? (
             <span className="w-3.5 h-3.5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
@@ -164,6 +231,27 @@ export const BookFinder: React.FC = () => {
           )}
         </button>
       </motion.form>
+
+      {/* Quick Picks */}
+      <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+        <span className="flex items-center gap-1 text-zinc-400">
+          <Flame className="w-3.5 h-3.5 text-emerald-400" />
+          Popular Titles:
+        </span>
+        {quickPicks.map((pick) => (
+          <button
+            key={pick}
+            type="button"
+            onClick={() => {
+              setQuery(pick);
+              soundEngine.playKeyClick();
+            }}
+            className="px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono"
+          >
+            {pick}
+          </button>
+        ))}
+      </div>
 
       {/* 3. In-App Reading View */}
       <AnimatePresence>
@@ -235,63 +323,65 @@ export const BookFinder: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 4. Navigation Tabs & Quick Suggestions */}
+      {/* 4. Segmented Tab Switcher */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-zinc-900 border border-zinc-800 text-xs">
+          <button
+            type="button"
+            onClick={() => handleTabChange('omniverse')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              bookViewTab === 'omniverse'
+                ? 'bg-emerald-500 text-black font-bold shadow-xs'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>Global Book Omniverse ({ALL_BOOK_PLATFORMS.length})</span>
+          </button>
+
           <button
             type="button"
             onClick={() => handleTabChange('curated')}
-            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'curated'
-                ? 'bg-emerald-500 text-black font-semibold shadow-xs'
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              bookViewTab === 'curated'
+                ? 'bg-emerald-500 text-black font-bold shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Sparkles className="w-3 h-3" />
+            <Sparkles className="w-3.5 h-3.5" />
             <span>Curated Free Classics ({CURATED_CLASSIC_BOOKS.length})</span>
           </button>
+
           <button
             type="button"
             onClick={() => handleTabChange('gutendex')}
-            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'gutendex'
-                ? 'bg-white text-zinc-950 font-semibold shadow-xs'
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              bookViewTab === 'gutendex'
+                ? 'bg-white text-zinc-950 font-bold shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <BookMarked className="w-3 h-3" />
-            <span>Gutenberg Search</span>
+            <BookMarked className="w-3.5 h-3.5" />
+            <span>Live Gutenberg API</span>
           </button>
+
           <button
             type="button"
             onClick={() => handleTabChange('openlibrary')}
-            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'openlibrary'
-                ? 'bg-white text-zinc-950 font-semibold shadow-xs'
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              bookViewTab === 'openlibrary'
+                ? 'bg-white text-zinc-950 font-bold shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Layers className="w-3 h-3" />
+            <Layers className="w-3.5 h-3.5" />
             <span>Open Library Archive</span>
           </button>
         </div>
 
-        {/* Quick Picks */}
-        <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
-          <span>Suggestions:</span>
-          {quickPicks.map((pick) => (
-            <button
-              key={pick}
-              type="button"
-              onClick={() => {
-                setQuery(pick);
-                handleSearch(undefined, 'gutendex');
-              }}
-              className="px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
-            >
-              {pick}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>{filteredBookPlatforms.length} book platforms indexed</span>
         </div>
       </div>
 
@@ -309,8 +399,158 @@ export const BookFinder: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 6. TAB: Curated Free Classics */}
-      {activeTab === 'curated' && (
+      {/* 6. TAB A: Global Books Omniverse (42+ Platforms) */}
+      {bookViewTab === 'omniverse' && (
+        <div className="space-y-4">
+          {/* Category & Tier Filters */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono scrollbar-none">
+              {BOOK_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playKeyClick();
+                    setSelectedBookCategory(cat);
+                  }}
+                  className={`px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                    selectedBookCategory === cat
+                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
+                      : 'bg-zinc-900/80 text-zinc-400 hover:text-white border border-zinc-800'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs shrink-0 self-start md:self-auto">
+              {(['All', 'Free', 'Paid', 'Library'] as const).map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setSelectedBookTier(tier)}
+                  className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer font-mono text-[11px] ${
+                    selectedBookTier === tier
+                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {tier === 'All'
+                    ? 'All'
+                    : tier === 'Free'
+                    ? 'Free 🟢'
+                    : tier === 'Paid'
+                    ? 'Commercial 💳'
+                    : 'Library 🏛️'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Search Banner if Query Present */}
+          {query.trim() && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs"
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-zinc-300">
+                  Ready to dispatch 1-click deep search for{' '}
+                  <span className="text-white font-bold font-mono">"{query.trim()}"</span> across all 42+ book platforms:
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-zinc-400 hover:text-white text-xs underline cursor-pointer"
+              >
+                Clear
+              </button>
+            </motion.div>
+          )}
+
+          {/* Staggered Omniverse Book Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[580px] overflow-y-auto pr-1">
+            <AnimatePresence mode="popLayout">
+              {filteredBookPlatforms.map((platform, idx) => (
+                <motion.div
+                  key={platform.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, delay: idx * 0.02 }}
+                  whileHover={{ y: -3 }}
+                  className="group flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/50 hover:bg-zinc-850/80 transition-all space-y-3 shadow-md"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700/60 truncate">
+                        {platform.category}
+                      </span>
+                      <span
+                        className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-md border font-semibold shrink-0 ${
+                          platform.tier.includes('Free') || platform.tier.includes('Open')
+                            ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40'
+                            : platform.tier.includes('Library')
+                            ? 'bg-purple-950/40 text-purple-300 border-purple-800/40'
+                            : 'bg-amber-950/40 text-amber-300 border-amber-800/40'
+                        }`}
+                      >
+                        {platform.badge}
+                      </span>
+                    </div>
+
+                    <h4 className="font-semibold text-sm text-white group-hover:text-emerald-300 transition-colors flex items-center gap-1.5">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: platform.color }}
+                      />
+                      <span className="truncate">{platform.name}</span>
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                      {platform.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                    <motion.a
+                      whileTap={{ scale: 0.96 }}
+                      href={query.trim() ? platform.getUrl(query) : platform.directHomeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundEngine.playKeyClick()}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-200 hover:text-black border border-emerald-500/30 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    >
+                      <span>
+                        {query.trim()
+                          ? `Search on ${platform.name.split(' ')[0]}`
+                          : `Explore ${platform.name.split(' ')[0]}`}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </motion.a>
+
+                    <a
+                      href={platform.directHomeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      title={`Visit ${platform.name} Homepage`}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* 7. TAB B: Curated Free Classics */}
+      {bookViewTab === 'curated' && (
         <div className="space-y-4">
           {/* Genre Filter Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
@@ -318,7 +558,10 @@ export const BookFinder: React.FC = () => {
               <button
                 key={g}
                 type="button"
-                onClick={() => setSelectedGenre(g)}
+                onClick={() => {
+                  soundEngine.playKeyClick();
+                  setSelectedGenre(g);
+                }}
                 className={`px-3 py-1 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   selectedGenre === g
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-medium'
@@ -332,7 +575,7 @@ export const BookFinder: React.FC = () => {
 
           {/* Grid of Curated Books */}
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-1"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[540px] overflow-y-auto pr-1"
             initial="hidden"
             animate="visible"
             variants={{
@@ -425,8 +668,8 @@ export const BookFinder: React.FC = () => {
         </div>
       )}
 
-      {/* 7. TAB: Gutenberg Search Results */}
-      {activeTab === 'gutendex' && (
+      {/* 8. TAB C: Live Gutenberg API Search */}
+      {bookViewTab === 'gutendex' && (
         <div className="space-y-3">
           {gutendexBooks.length === 0 && !loading && (
             <div className="p-8 text-center rounded-2xl bg-zinc-900/40 border border-zinc-800/60">
@@ -532,8 +775,8 @@ export const BookFinder: React.FC = () => {
         </div>
       )}
 
-      {/* 8. TAB: Open Library Results */}
-      {activeTab === 'openlibrary' && (
+      {/* 9. TAB D: Open Library Results */}
+      {bookViewTab === 'openlibrary' && (
         <div className="space-y-3">
           {openLibraryDocs.length === 0 && !loading && (
             <div className="p-8 text-center rounded-2xl bg-zinc-900/40 border border-zinc-800/60">
@@ -590,7 +833,7 @@ export const BookFinder: React.FC = () => {
                     )}
 
                     <span className="text-[11px] text-cyan-400 mt-2 font-medium flex items-center gap-1">
-                      <BookOpen className="w-3 h-3" /> View on Open Library
+                      <BookOpen className="w-3.5 h-3.5" /> View on Open Library
                     </span>
                   </motion.a>
                 );
