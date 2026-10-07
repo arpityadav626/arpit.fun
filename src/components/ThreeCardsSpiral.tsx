@@ -190,6 +190,11 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let isDragging = false;
     let startPointerY = 0;
     let startPointerX = 0;
+    let dragVelocity = 0;
+
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    const dragMultiplierY = isTouch ? 0.018 : 0.006;
+    const dragMultiplierX = isTouch ? 0.016 : 0.008;
 
     const evalClosedLoop = (theta: number) => {
       // Periodic tilted 3D space curve
@@ -234,10 +239,12 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       e.preventDefault();
       // 3x higher sensitivity for effortless scrolling
       targetScroll += e.deltaY * 0.0036;
+      dragVelocity = 0;
     };
 
     const handlePointerDown = (e: PointerEvent) => {
       isDragging = true;
+      dragVelocity = 0;
       startPointerX = e.clientX;
       startPointerY = e.clientY;
     };
@@ -250,7 +257,9 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       if (isDragging) {
         const deltaX = e.clientX - startPointerX;
         const deltaY = e.clientY - startPointerY;
-        targetScroll += (deltaX * 0.0075 - deltaY * 0.0045);
+        const moveDelta = deltaX * dragMultiplierX - deltaY * dragMultiplierY;
+        targetScroll += moveDelta;
+        dragVelocity = moveDelta * 0.92;
         startPointerX = e.clientX;
         startPointerY = e.clientY;
       }
@@ -315,8 +324,14 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       // Smooth responsive interpolation for momentum
       currentScroll += (targetScroll - currentScroll) * 0.10;
 
+      // Kinetic inertia momentum on swipe release
+      if (!isDragging && Math.abs(dragVelocity) > 0.00008) {
+        targetScroll += dragVelocity;
+        dragVelocity *= 0.94;
+      }
+
       // Gentle ambient drift when idle
-      if (!isDragging && !reducedMotion) {
+      if (!isDragging && Math.abs(dragVelocity) <= 0.00008 && !reducedMotion) {
         targetScroll += 0.0004;
       }
 
@@ -393,7 +408,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
   return (
     <div className="relative w-full h-full min-h-screen flex items-center justify-center overflow-hidden select-none">
       {/* Three.js Canvas Container */}
-      <div ref={mountRef} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing" />
+      <div ref={mountRef} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-none select-none" />
 
       {/* Floating Pacomepertant-style Cursor Tooltip Tag */}
       {hoveredTool && (
