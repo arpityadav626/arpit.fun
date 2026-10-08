@@ -43,6 +43,7 @@ const WebHubExperience: React.FC = () => {
 
   const handleSelectTool = useCallback((tool: ToolDefinition) => {
     setActiveTool(tool.id);
+    window.dispatchEvent(new CustomEvent('webhub:center_tool', { detail: { toolId: tool.id } }));
     setFocusedTool(tool);
     setIsFocusModalOpen(true);
   }, [setActiveTool]);

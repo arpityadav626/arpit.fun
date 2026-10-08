@@ -101,21 +101,46 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     isModalOpenRef.current = isModalOpen;
   }, [isModalOpen]);
 
-  // Step 1 card backward along helical loop
+  // Step 1 card backward along helical loop (snapped)
   const handlePrevCard = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (soundEnabled) soundEngine.playKeyClick();
     const step = (Math.PI * 2) / Math.max(1, catalog.length);
-    targetScrollRef.current -= step;
+    const currentSnap = Math.round(targetScrollRef.current / step);
+    targetScrollRef.current = (currentSnap - 1) * step;
   };
 
-  // Step 1 card forward along helical loop
+  // Step 1 card forward along helical loop (snapped)
   const handleNextCard = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (soundEnabled) soundEngine.playKeyClick();
+    if (soundEngine.isEnabled()) soundEngine.playKeyClick();
     const step = (Math.PI * 2) / Math.max(1, catalog.length);
-    targetScrollRef.current += step;
+    const currentSnap = Math.round(targetScrollRef.current / step);
+    targetScrollRef.current = (currentSnap + 1) * step;
   };
+
+  // Center spiral onto a specific tool ID (shortest rotational path)
+  const centerOnTool = (toolId: string) => {
+    const index = catalog.findIndex((t) => t.id === toolId);
+    if (index === -1) return;
+    const step = (Math.PI * 2) / Math.max(1, catalog.length);
+    const currentRotations = Math.round(targetScrollRef.current / (Math.PI * 2));
+    let desired = currentRotations * (Math.PI * 2) - index * step;
+    while (desired - targetScrollRef.current > Math.PI) desired -= Math.PI * 2;
+    while (desired - targetScrollRef.current < -Math.PI) desired += Math.PI * 2;
+    targetScrollRef.current = desired;
+  };
+
+  useEffect(() => {
+    const handleCenterEvent = (e: Event) => {
+      const ce = e as CustomEvent<{ toolId: string }>;
+      if (ce.detail?.toolId) {
+        centerOnTool(ce.detail.toolId);
+      }
+    };
+    window.addEventListener('webhub:center_tool', handleCenterEvent);
+    return () => window.removeEventListener('webhub:center_tool', handleCenterEvent);
+  }, [catalog]);
 
   // Sync catalog updates
   useEffect(() => {
@@ -199,7 +224,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         fragmentShader: cardFragmentShader,
         uniforms: {
           map: { value: texture },
-          focalZ: { value: 3.2 },
+          focalZ: { value: 3.4 },
           blurStrength: { value: 0.016 }, // ~16px blur in UV space for background cards
         },
         transparent: true,
@@ -233,11 +258,11 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     const dragMultiplierX = isTouch ? 0.0065 : 0.0035;
 
     const evalClosedLoop = (theta: number) => {
-      // Periodic tilted 3D space curve
-      // Front focal card sits near theta = 0 at (0, -0.2, 3.2)
-      const x = 4.6 * Math.sin(theta) - 0.6 * Math.sin(2.0 * theta);
-      const y = -0.2 + 1.8 * Math.cos(theta) + 1.0 * Math.sin(theta);
-      const z = 3.2 * Math.cos(theta) - 0.4 * Math.cos(2.0 * theta);
+      // Perfectly centered periodic 3D space ribbon
+      // Front focal card sits dead-center at theta = 0 at (0, 0, 3.4) - 100% DEAD CENTER & UPRIGHT!
+      const x = 4.6 * Math.sin(theta) - 0.5 * Math.sin(2.0 * theta);
+      const y = 0.65 - 0.65 * Math.cos(theta); // At theta=0, y=0.0! Background cards rise to 1.3
+      const z = 3.4 * Math.cos(theta) - 0.2 * Math.cos(2.0 * theta) + 0.2; // At theta=0, z=3.4!
 
       return new THREE.Vector3(x, y, z);
     };
@@ -262,9 +287,6 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         const normal = new THREE.Vector3().crossVectors(tangent, upVec).normalize();
 
         mesh.lookAt(mesh.position.clone().add(normal));
-
-        // Subtle inward tilt adjustment
-        mesh.rotation.z += 0.06;
       });
     };
 
@@ -406,9 +428,11 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         dragVelocity *= 0.85; // Decelerates gracefully within 300-400ms
       }
 
-      // Very subtle ambient drift when idle
-      if (!isDragging && Math.abs(dragVelocity) <= 0.00005 && !reducedMotion) {
-        targetScrollRef.current += 0.00015;
+      // Magnetic snap to center: smoothly locks nearest card dead-center
+      if (!isDragging && Math.abs(dragVelocity) <= 0.0002) {
+        const step = (Math.PI * 2) / Math.max(1, totalCards);
+        const snapTarget = Math.round(targetScrollRef.current / step) * step;
+        targetScrollRef.current += (snapTarget - targetScrollRef.current) * 0.12;
       }
 
       // Parallax camera tilt

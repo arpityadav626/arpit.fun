@@ -67,7 +67,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [addToolModalOpen, setAddToolModalOpen] = useState(false);
   const [manageModalOpen, setManageModalOpen] = useState(false);
 
-  const [soundEnabled, setSoundEnabledState] = useState(false);
+  const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('webhub_sound_enabled');
+      if (stored !== null) return stored === 'true';
+    } catch {
+      // Ignore
+    }
+    return true; // Default: ON everywhere!
+  });
+
+  // Sync sound engine state immediately on mount and changes
+  useEffect(() => {
+    soundEngine.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
   const [reducedMotion, setReducedMotionState] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem('webhub_reduced_motion');
@@ -99,6 +113,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSoundEnabled = (enabled: boolean) => {
     setSoundEnabledState(enabled);
     soundEngine.setEnabled(enabled);
+    try {
+      localStorage.setItem('webhub_sound_enabled', String(enabled));
+    } catch {
+      // Ignore
+    }
     if (enabled) {
       soundEngine.playChime(440, 'sine', 0.2);
     }

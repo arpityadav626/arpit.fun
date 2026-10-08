@@ -75,6 +75,7 @@ export const CommandPalette: React.FC = () => {
       icon: getToolIcon(tool.id),
       onSelect: () => {
         setActiveTool(tool.id);
+        window.dispatchEvent(new CustomEvent('webhub:center_tool', { detail: { toolId: tool.id } }));
         setViewMode('focus');
         setCommandPaletteOpen(false);
       },

@@ -6,7 +6,26 @@
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private enabled: boolean = false;
+  private enabled: boolean = true; // Enabled by default everywhere
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const unlockAudio = () => {
+        this.initContext();
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        window.removeEventListener('pointerdown', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+        window.removeEventListener('click', unlockAudio);
+      };
+      window.addEventListener('pointerdown', unlockAudio, { passive: true });
+      window.addEventListener('touchstart', unlockAudio, { passive: true });
+      window.addEventListener('keydown', unlockAudio, { passive: true });
+      window.addEventListener('click', unlockAudio, { passive: true });
+    }
+  }
 
   private initContext() {
     if (!this.ctx && typeof window !== 'undefined') {
