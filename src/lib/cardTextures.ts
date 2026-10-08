@@ -398,7 +398,171 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
     ctx.restore();
   }
 
-  // 3. Subtle glass specular sheen diagonal reflection across the card
+  // --- 3. High-Contrast Typography & Identity Labels (Clear Tool Recognition) ---
+  const toolAccents: Record<string, { primary: string; glow: string; badgeBg: string }> = {
+    film: { primary: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)', badgeBg: 'rgba(245, 158, 11, 0.22)' },
+    books: { primary: '#c084fc', glow: 'rgba(192, 132, 252, 0.5)', badgeBg: 'rgba(192, 132, 252, 0.22)' },
+    music: { primary: '#22d3ee', glow: 'rgba(34, 211, 238, 0.5)', badgeBg: 'rgba(34, 211, 238, 0.22)' },
+    ai: { primary: '#38bdf8', glow: 'rgba(56, 189, 248, 0.5)', badgeBg: 'rgba(56, 189, 248, 0.22)' },
+    operators: { primary: '#10b981', glow: 'rgba(16, 185, 129, 0.5)', badgeBg: 'rgba(16, 185, 129, 0.22)' },
+  };
+  const accent = toolAccents[tool.id] || {
+    primary: '#ec4899',
+    glow: 'rgba(236, 72, 153, 0.5)',
+    badgeBg: 'rgba(236, 72, 153, 0.22)',
+  };
+
+  // 3a. Top Header Identity Tag
+  const topTagY = padding + 28;
+  const topTagH = 38;
+  const indexStr = `0${_index + 1}`.slice(-2);
+  const categoryStr = (tool.category || 'AI SUITE').toUpperCase();
+  const tagText = `[ ${indexStr} ]  //  ${categoryStr}`;
+
+  ctx.save();
+  ctx.font = 'bold 16px "SF Mono", "Fira Code", monospace';
+  const tagTextWidth = ctx.measureText(tagText).width;
+  const tagPillW = tagTextWidth + 44;
+
+  // Frosted dark pill background
+  ctx.fillStyle = 'rgba(7, 9, 18, 0.82)';
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(padding + 24, topTagY, tagPillW, topTagH, 19);
+  } else {
+    ctx.rect(padding + 24, topTagY, tagPillW, topTagH);
+  }
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Glowing status dot
+  ctx.fillStyle = accent.primary;
+  ctx.shadowColor = accent.primary;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(padding + 42, topTagY + topTagH / 2, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Tag text
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillText(tagText, padding + 56, topTagY + 24);
+
+  // Top-Right Feature Badge (e.g. "YouTube & Cinema", "42+ Platforms", etc.)
+  if (tool.badge) {
+    ctx.font = '600 14px "Plus Jakarta Sans", system-ui, sans-serif';
+    const badgeTextWidth = ctx.measureText(tool.badge).width;
+    const badgeW = badgeTextWidth + 30;
+    const badgeX = W - padding - 24 - badgeW;
+
+    ctx.fillStyle = accent.badgeBg;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(badgeX, topTagY, badgeW, topTagH, 19);
+    } else {
+      ctx.rect(badgeX, topTagY, badgeW, topTagH);
+    }
+    ctx.fill();
+    ctx.strokeStyle = accent.primary;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(tool.badge, badgeX + 15, topTagY + 24);
+  }
+  ctx.restore();
+
+  // 3b. Bottom High-Contrast Frosted Glass Identity Panel
+  const bannerH = 158;
+  const bannerY = H - padding - bannerH;
+
+  ctx.save();
+  // Bottom glass panel gradient
+  const bannerGrad = ctx.createLinearGradient(0, bannerY, 0, H - padding);
+  bannerGrad.addColorStop(0, 'rgba(6, 8, 16, 0.90)');
+  bannerGrad.addColorStop(0.35, 'rgba(5, 6, 14, 0.95)');
+  bannerGrad.addColorStop(1, 'rgba(3, 4, 10, 0.98)');
+  ctx.fillStyle = bannerGrad;
+  ctx.fillRect(padding, bannerY, cardW, bannerH);
+
+  // Hairline top border for the frosted panel
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padding, bannerY);
+  ctx.lineTo(W - padding, bannerY);
+  ctx.stroke();
+
+  // Left vibrant accent glow bar
+  ctx.fillStyle = accent.primary;
+  ctx.shadowColor = accent.primary;
+  ctx.shadowBlur = 16;
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(padding + 28, bannerY + 26, 5, 84, 2.5);
+  } else {
+    ctx.fillRect(padding + 28, bannerY + 26, 5, 84);
+  }
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Tool Title (Bold, High-Contrast Typography)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 36px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+
+  // Responsive font scaling if tool name is long
+  const displayTitle = tool.name;
+  if (ctx.measureText(displayTitle).width > cardW - 280) {
+    ctx.font = 'bold 30px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+  }
+  ctx.fillText(displayTitle, padding + 48, bannerY + 58);
+
+  // Tool Tagline / Description
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
+  ctx.font = '500 17px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+  let displayTagline = tool.tagline || tool.description || '';
+  if (displayTagline.length > 68) {
+    displayTagline = displayTagline.slice(0, 65) + '...';
+  }
+  ctx.fillText(displayTagline, padding + 48, bannerY + 98);
+  ctx.restore();
+
+  // Action Launch Pill on Bottom-Right
+  const launchW = 138;
+  const launchH = 44;
+  const launchX = W - padding - 28 - launchW;
+  const launchY = bannerY + 44;
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(launchX, launchY, launchW, launchH, 22);
+  } else {
+    ctx.rect(launchX, launchY, launchW, launchH);
+  }
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Pill CTA text
+  ctx.font = 'bold 15px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('OPEN ↗', launchX + launchW / 2, launchY + launchH / 2);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.restore();
+
+  // 4. Subtle glass specular sheen diagonal reflection across the card
   const sheen = ctx.createLinearGradient(0, 0, W, H);
   sheen.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
   sheen.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');
@@ -408,7 +572,7 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
   ctx.fillStyle = sheen;
   ctx.fillRect(padding, padding, cardW, cardH);
 
-  // 4. Subtle frosted glass border outline
+  // 5. Subtle frosted glass border outline
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
   ctx.lineWidth = 2.5;
   ctx.stroke();

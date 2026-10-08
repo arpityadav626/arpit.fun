@@ -5,7 +5,7 @@ import { getToolCatalog } from '../lib/toolCatalog';
 import { useSettings } from '../context/SettingsContext';
 import { soundEngine } from '../lib/audioSynth';
 import { createCardTexture } from '../lib/cardTextures';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ThreeCardsSpiralProps {
   onSelectTool: (tool: ToolDefinition) => void;
@@ -81,6 +81,28 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
   const { soundEnabled, reducedMotion } = useSettings();
   const [catalog, setCatalog] = useState<ToolDefinition[]>(() => getToolCatalog());
   const [hoveredTool, setHoveredTool] = useState<{ tool: ToolDefinition; x: number; y: number } | null>(null);
+
+  // Active front card tracking (card closest to viewer in focal spotlight)
+  const [activeFrontTool, setActiveFrontTool] = useState<ToolDefinition>(() => getToolCatalog()[0]);
+  const [activeFrontIndex, setActiveFrontIndex] = useState<number>(0);
+  const activeFrontIdRef = useRef<string>(getToolCatalog()[0]?.id || '');
+  const targetScrollRef = useRef<number>(0);
+
+  // Step 1 card backward along helical loop
+  const handlePrevCard = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (soundEnabled) soundEngine.playKeyClick();
+    const step = (Math.PI * 2) / Math.max(1, catalog.length);
+    targetScrollRef.current -= step;
+  };
+
+  // Step 1 card forward along helical loop
+  const handleNextCard = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (soundEnabled) soundEngine.playKeyClick();
+    const step = (Math.PI * 2) / Math.max(1, catalog.length);
+    targetScrollRef.current += step;
+  };
 
   // Sync catalog updates
   useEffect(() => {
@@ -183,7 +205,6 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     // 4. Closed 3D Helical Loop Formulation (100% Continuous Periodic Loop)
     // Period = 2 * PI. As currentScroll changes, cards circulate forever with zero breaks!
-    let targetScroll = 0;
     let currentScroll = 0;
     let mouseX = 0;
     let mouseY = 0;
@@ -191,6 +212,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let startPointerY = 0;
     let startPointerX = 0;
     let dragVelocity = 0;
+    let pointerDownPos = { x: 0, y: 0, time: 0 };
 
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     // Calibrated smooth & controlled multipliers (neither sluggish nor overly fast)
@@ -239,7 +261,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       // Controlled smooth wheel speed
-      targetScroll += e.deltaY * 0.0018;
+      targetScrollRef.current += e.deltaY * 0.0018;
       dragVelocity = 0;
     };
 
@@ -248,6 +270,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       dragVelocity = 0;
       startPointerX = e.clientX;
       startPointerY = e.clientY;
+      pointerDownPos = { x: e.clientX, y: e.clientY, time: Date.now() };
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -259,7 +282,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         const deltaX = e.clientX - startPointerX;
         const deltaY = e.clientY - startPointerY;
         const moveDelta = deltaX * dragMultiplierX - deltaY * dragMultiplierY;
-        targetScroll += moveDelta;
+        targetScrollRef.current += moveDelta;
         // Controlled, gentle momentum release
         dragVelocity = moveDelta * 0.45;
         startPointerX = e.clientX;
@@ -267,8 +290,28 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       }
     };
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (e: PointerEvent) => {
       isDragging = false;
+      const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      const elapsed = Date.now() - pointerDownPos.time;
+
+      // Quick tap detection on mobile without dragging (< 10px movement, < 350ms)
+      if (dist < 10 && elapsed < 350) {
+        const rect = mount.getBoundingClientRect();
+        pointer.x = ((e.clientX - rect.left) / width) * 2 - 1;
+        pointer.y = -((e.clientY - rect.top) / height) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+        const intersects = raycaster.intersectObjects(meshes);
+        if (intersects.length > 0) {
+          const hit = intersects[0].object as THREE.Mesh;
+          const tool = hit.userData.tool as ToolDefinition;
+          if (tool) {
+            soundEngine.playSearchPulse();
+            onSelectTool(tool);
+          }
+        }
+      }
     };
 
     mount.addEventListener('wheel', handleWheel, { passive: false });
@@ -324,17 +367,17 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     const animate = () => {
       // Smooth, weighted interpolation for organic glide
-      currentScroll += (targetScroll - currentScroll) * 0.075;
+      currentScroll += (targetScrollRef.current - currentScroll) * 0.075;
 
       // Kinetic inertia momentum on swipe release - smooth natural deceleration
       if (!isDragging && Math.abs(dragVelocity) > 0.00005) {
-        targetScroll += dragVelocity;
+        targetScrollRef.current += dragVelocity;
         dragVelocity *= 0.85; // Decelerates gracefully within 300-400ms
       }
 
       // Very subtle ambient drift when idle
       if (!isDragging && Math.abs(dragVelocity) <= 0.00005 && !reducedMotion) {
-        targetScroll += 0.00015;
+        targetScrollRef.current += 0.00015;
       }
 
       // Parallax camera tilt
@@ -343,6 +386,30 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       camera.lookAt(0, 0, 0);
 
       updateSpiralPositions();
+
+      // Detect frontmost card in focus (maximum Z closest to camera)
+      let frontMesh: THREE.Mesh | null = null;
+      let maxZ = -Infinity;
+      for (let i = 0; i < meshes.length; i++) {
+        const m = meshes[i];
+        if (m.position.z > maxZ) {
+          maxZ = m.position.z;
+          frontMesh = m;
+        }
+      }
+
+      if (frontMesh && frontMesh.userData.tool) {
+        const fTool = frontMesh.userData.tool as ToolDefinition;
+        const fIndex = frontMesh.userData.index as number;
+        if (fTool.id !== activeFrontIdRef.current) {
+          activeFrontIdRef.current = fTool.id;
+          setActiveFrontTool(fTool);
+          setActiveFrontIndex(fIndex);
+          if (soundEnabled && isDragging) {
+            soundEngine.playKeyClick();
+          }
+        }
+      }
 
       // Raycasting check
       raycaster.setFromCamera(pointer, camera);
@@ -432,6 +499,77 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
           </div>
           {/* Subtle pointer chevron */}
           <div className="w-2.5 h-2.5 rotate-45 bg-white -mt-1.5 shadow-xs" />
+        </div>
+      )}
+
+      {/* Mobile & Desktop Active Front-Card HUD Dock */}
+      {activeFrontTool && (
+        <div className="fixed bottom-4 sm:bottom-8 left-4 right-[4.5rem] sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-md z-30 pointer-events-auto select-none animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="relative overflow-hidden rounded-2xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/15 p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
+            {/* Top Cyan Glow Accent Line */}
+            <div className="absolute top-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
+
+            {/* Header: Index, Category, Prev/Next Arrows */}
+            <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-cyan-400">
+                  {`0${activeFrontIndex + 1}`.slice(-2)}
+                </span>
+                <span className="font-mono text-[11px] text-zinc-500">
+                  / {`0${displayTools.length}`.slice(-2)}
+                </span>
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">
+                  {activeFrontTool.category}
+                </span>
+              </div>
+
+              {/* Prev / Next Navigation Arrows */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handlePrevCard}
+                  title="Previous Tool"
+                  aria-label="Previous Tool"
+                  className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 active:scale-90 flex items-center justify-center text-zinc-300 hover:text-white transition-all cursor-pointer border border-white/10"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextCard}
+                  title="Next Tool"
+                  aria-label="Next Tool"
+                  className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 active:scale-90 flex items-center justify-center text-zinc-300 hover:text-white transition-all cursor-pointer border border-white/10"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Title & Tagline */}
+            <div className="mb-2 sm:mb-3">
+              <h3 className="font-bold text-sm sm:text-base text-white tracking-tight truncate">
+                {activeFrontTool.name}
+              </h3>
+              <p className="text-[11px] sm:text-xs text-zinc-400 line-clamp-1 mt-0.5">
+                {activeFrontTool.tagline}
+              </p>
+            </div>
+
+            {/* 1-Tap Launch Button */}
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playSearchPulse();
+                onSelectTool(activeFrontTool);
+              }}
+              className="w-full py-2 sm:py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(6,182,212,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-200" />
+              <span className="truncate">Open {activeFrontTool.name.split(' ')[0]}</span>
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+            </button>
+          </div>
         </div>
       )}
     </div>
