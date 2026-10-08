@@ -419,81 +419,82 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
 
   // 3a. Top Header Identity Tag
   const topTagY = padding + 28;
-  const topTagH = 38;
+  const topTagH = 44;
   const indexStr = `0${_index + 1}`.slice(-2);
   const categoryStr = (tool.category || 'AI SUITE').toUpperCase();
   const tagText = `[ ${indexStr} ]  //  ${categoryStr}`;
 
   ctx.save();
-  ctx.font = 'bold 16px "SF Mono", "Fira Code", monospace';
+  ctx.font = 'bold 18px "JetBrains Mono", "SF Mono", monospace';
   const tagTextWidth = ctx.measureText(tagText).width;
-  const tagPillW = tagTextWidth + 44;
+  const tagPillW = tagTextWidth + 50;
 
   // Frosted dark pill background
-  ctx.fillStyle = 'rgba(7, 9, 18, 0.82)';
+  ctx.fillStyle = 'rgba(7, 9, 18, 0.88)';
   ctx.beginPath();
   if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(padding + 24, topTagY, tagPillW, topTagH, 19);
+    ctx.roundRect(padding + 24, topTagY, tagPillW, topTagH, 22);
   } else {
     ctx.rect(padding + 24, topTagY, tagPillW, topTagH);
   }
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // Glowing status dot
   ctx.fillStyle = accent.primary;
-  ctx.shadowColor = accent.primary;
-  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(padding + 42, topTagY + topTagH / 2, 4.5, 0, Math.PI * 2);
+  ctx.arc(padding + 44, topTagY + topTagH / 2, 5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
-  // Tag text
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillText(tagText, padding + 56, topTagY + 24);
+  // Tag text - High contrast, razor sharp, NO shadow blur!
+  ctx.fillStyle = '#ffffff';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(tagText, padding + 58, topTagY + topTagH / 2);
+  ctx.textBaseline = 'alphabetic';
 
   // Top-Right Feature Badge (e.g. "YouTube & Cinema", "42+ Platforms", etc.)
   if (tool.badge) {
-    ctx.font = '600 14px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.font = '700 17px "Plus Jakarta Sans", system-ui, sans-serif';
     const badgeTextWidth = ctx.measureText(tool.badge).width;
-    const badgeW = badgeTextWidth + 30;
+    const badgeW = badgeTextWidth + 36;
     const badgeX = W - padding - 24 - badgeW;
 
     ctx.fillStyle = accent.badgeBg;
     ctx.beginPath();
     if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(badgeX, topTagY, badgeW, topTagH, 19);
+      ctx.roundRect(badgeX, topTagY, badgeW, topTagH, 22);
     } else {
       ctx.rect(badgeX, topTagY, badgeW, topTagH);
     }
     ctx.fill();
     ctx.strokeStyle = accent.primary;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(tool.badge, badgeX + 15, topTagY + 24);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tool.badge, badgeX + 18, topTagY + topTagH / 2);
+    ctx.textBaseline = 'alphabetic';
   }
   ctx.restore();
 
   // 3b. Bottom High-Contrast Frosted Glass Identity Panel
-  const bannerH = 158;
+  const bannerH = 168;
   const bannerY = H - padding - bannerH;
 
   ctx.save();
-  // Bottom glass panel gradient
+  // Bottom glass panel gradient - deep solid contrast so text POPs with 100% clarity
   const bannerGrad = ctx.createLinearGradient(0, bannerY, 0, H - padding);
-  bannerGrad.addColorStop(0, 'rgba(6, 8, 16, 0.90)');
-  bannerGrad.addColorStop(0.35, 'rgba(5, 6, 14, 0.95)');
-  bannerGrad.addColorStop(1, 'rgba(3, 4, 10, 0.98)');
+  bannerGrad.addColorStop(0, 'rgba(4, 5, 12, 0.94)');
+  bannerGrad.addColorStop(0.3, 'rgba(3, 4, 10, 0.98)');
+  bannerGrad.addColorStop(1, '#020307');
   ctx.fillStyle = bannerGrad;
   ctx.fillRect(padding, bannerY, cardW, bannerH);
 
   // Hairline top border for the frosted panel
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(padding, bannerY);
@@ -502,63 +503,49 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
 
   // Left vibrant accent glow bar
   ctx.fillStyle = accent.primary;
-  ctx.shadowColor = accent.primary;
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(padding + 28, bannerY + 26, 5, 84, 2.5);
-  } else {
-    ctx.fillRect(padding + 28, bannerY + 26, 5, 84);
-  }
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.fillRect(padding + 28, bannerY + 28, 6, 96);
 
-  // Tool Title (Bold, High-Contrast Typography)
-  ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
-  ctx.shadowBlur = 16;
-  ctx.shadowOffsetY = 3;
+  // Tool Title (Bold, High-Contrast Typography - ZERO BLUR)
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 36px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 44px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
 
   // Responsive font scaling if tool name is long
   const displayTitle = tool.name;
-  if (ctx.measureText(displayTitle).width > cardW - 280) {
-    ctx.font = 'bold 30px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+  if (ctx.measureText(displayTitle).width > cardW - 300) {
+    ctx.font = 'bold 36px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
   }
-  ctx.fillText(displayTitle, padding + 48, bannerY + 58);
+  ctx.fillText(displayTitle, padding + 52, bannerY + 66);
 
-  // Tool Tagline / Description
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
-  ctx.font = '500 17px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+  // Tool Tagline / Description - Crisp, readable 22px
+  ctx.fillStyle = '#cbd5e1'; // Slate 300 - clear high contrast
+  ctx.font = '600 22px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
   let displayTagline = tool.tagline || tool.description || '';
-  if (displayTagline.length > 68) {
-    displayTagline = displayTagline.slice(0, 65) + '...';
+  if (displayTagline.length > 56) {
+    displayTagline = displayTagline.slice(0, 53) + '...';
   }
-  ctx.fillText(displayTagline, padding + 48, bannerY + 98);
+  ctx.fillText(displayTagline, padding + 52, bannerY + 110);
   ctx.restore();
 
   // Action Launch Pill on Bottom-Right
-  const launchW = 138;
-  const launchH = 44;
+  const launchW = 146;
+  const launchH = 50;
   const launchX = W - padding - 28 - launchW;
-  const launchY = bannerY + 44;
+  const launchY = bannerY + 52;
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
   ctx.beginPath();
   if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(launchX, launchY, launchW, launchH, 22);
+    ctx.roundRect(launchX, launchY, launchW, launchH, 25);
   } else {
     ctx.rect(launchX, launchY, launchW, launchH);
   }
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.50)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // Pill CTA text
-  ctx.font = 'bold 15px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.font = 'bold 18px "Plus Jakarta Sans", system-ui, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -586,10 +573,9 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
-  texture.anisotropy = 16;
+  texture.generateMipmaps = false;
   texture.needsUpdate = true;
   return texture;
 }

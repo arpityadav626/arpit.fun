@@ -23,11 +23,6 @@
     image-rendering: -webkit-optimize-contrast;
     image-rendering: high-quality;
   }
-
-  canvas {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: high-quality;
-  }
 }
 
 /* Custom marquee keyframes */

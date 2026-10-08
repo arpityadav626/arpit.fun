@@ -27,50 +27,28 @@ const cardVertexShader = `
   }
 `;
 
-// GLSL Fragment Shader: Dynamic Depth of Field (DoF) multi-tap Poisson/Gaussian disc blur
-// Front card in spotlight is 100% pin-sharp; background/depth cards are smoothly blurred!
+// GLSL Fragment Shader: 100% Razor-Sharp Pristine Texture Rendering
+// All cards retain pure vector-grade text clarity; depth is conveyed through cinematic lighting & perspective
 const cardFragmentShader = `
   uniform sampler2D map;
   uniform float focalZ;
-  uniform float blurStrength;
   varying vec2 vUv;
   varying vec3 vWorldPosition;
   varying vec3 vNormal;
 
   void main() {
-    // Distance behind the front focal plane (focalZ is ~3.0)
-    float depthDist = max(0.0, focalZ - vWorldPosition.z);
-    
-    // Smooth blur ramp: 0.0 at focal plane, ramps up to 1.0 into background depth
-    float blurFactor = smoothstep(0.8, 5.2, depthDist) * blurStrength;
-
-    vec4 color = vec4(0.0);
-    if (blurFactor < 0.0006) {
-      // 100% Crisp / Razor-sharp when in the front focal zone
-      color = texture2D(map, vUv);
-    } else {
-      // Multi-tap Gaussian disc blur for background depth cards
-      vec2 offset = vec2(blurFactor);
-      color += texture2D(map, vUv) * 0.22;
-      color += texture2D(map, vUv + vec2(offset.x, 0.0)) * 0.13;
-      color += texture2D(map, vUv - vec2(offset.x, 0.0)) * 0.13;
-      color += texture2D(map, vUv + vec2(0.0, offset.y)) * 0.13;
-      color += texture2D(map, vUv - vec2(0.0, offset.y)) * 0.13;
-      color += texture2D(map, vUv + vec2(offset.x * 0.707, offset.y * 0.707)) * 0.065;
-      color += texture2D(map, vUv - vec2(offset.x * 0.707, offset.y * 0.707)) * 0.065;
-      color += texture2D(map, vUv + vec2(-offset.x * 0.707, offset.y * 0.707)) * 0.065;
-      color += texture2D(map, vUv + vec2(offset.x * 0.707, -offset.y * 0.707)) * 0.065;
-    }
-
+    // 100% Crisp / Razor-sharp direct texture sampling without artificial blur
+    vec4 color = texture2D(map, vUv);
     if (color.a < 0.05) discard;
 
     // Subtle depth dimming: background cards are gently dimmer so front card pops
-    float depthDim = clamp(1.0 - depthDist * 0.075, 0.42, 1.0);
+    float depthDist = max(0.0, focalZ - vWorldPosition.z);
+    float depthDim = clamp(1.0 - depthDist * 0.075, 0.45, 1.0);
     color.rgb *= depthDim;
 
     // Specular highlight based on curved surface normal
     vec3 lightDir = normalize(vec3(0.3, 0.8, 1.0));
-    float spec = pow(max(dot(vNormal, lightDir), 0.0), 16.0) * 0.15;
+    float spec = pow(max(dot(vNormal, lightDir), 0.0), 16.0) * 0.12;
     color.rgb += vec3(spec);
 
     gl_FragColor = color;
@@ -194,17 +172,17 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     scene.add(cardGroup);
 
     const meshes: THREE.Mesh[] = [];
-    // User requested "chota karo" -> proportional compact size
-    const cardWidth = 3.3;
-    const cardHeight = 2.1;
+    // Balanced proportional size: 3.5 x 2.22 preserves compact aesthetic while ensuring large crisp readable text
+    const cardWidth = 3.5;
+    const cardHeight = 2.22;
     const totalCards = displayTools.length;
 
-    // Cylindrical curved geometry
+    // Cylindrical curved geometry with subtle curvature
     const geometry = new THREE.PlaneGeometry(cardWidth, cardHeight, 32, 1);
     const posAttribute = geometry.attributes.position;
     for (let i = 0; i < posAttribute.count; i++) {
       const vx = posAttribute.getX(i);
-      const curve = -Math.sin((vx / (cardWidth / 2)) * (Math.PI / 2)) * 0.32;
+      const curve = -Math.sin((vx / (cardWidth / 2)) * (Math.PI / 2)) * 0.28;
       posAttribute.setZ(i, curve);
     }
     geometry.computeVertexNormals();
@@ -219,14 +197,13 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         textureMap.set(tool.id, texture);
       }
 
-      // ShaderMaterial with dynamic Depth of Field blur
+      // 100% Crisp ShaderMaterial with zero artificial texture blur
       const material = new THREE.ShaderMaterial({
         vertexShader: cardVertexShader,
         fragmentShader: cardFragmentShader,
         uniforms: {
           map: { value: texture },
           focalZ: { value: 3.4 },
-          blurStrength: { value: 0.016 }, // ~16px blur in UV space for background cards
         },
         transparent: true,
         side: THREE.DoubleSide,
@@ -241,6 +218,24 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       meshes.push(mesh);
       cardGroup.add(mesh);
     });
+
+    // Re-render textures when external web fonts (Plus Jakarta Sans & JetBrains Mono) are ready
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => {
+        textureMap.forEach((_, toolId) => {
+          const t = displayTools.find((item) => item.id === toolId);
+          const idx = displayTools.findIndex((item) => item.id === toolId);
+          if (t && idx !== -1) {
+            const freshTex = createCardTexture(t, idx);
+            textureMap.set(toolId, freshTex);
+            const m = meshes.find((mesh) => mesh.userData.tool?.id === toolId);
+            if (m && (m.material as THREE.ShaderMaterial).uniforms?.map) {
+              (m.material as THREE.ShaderMaterial).uniforms.map.value = freshTex;
+            }
+          }
+        });
+      });
+    }
 
     // 4. Closed 3D Helical Loop Formulation (100% Continuous Periodic Loop)
     // Period = 2 * PI. As currentScroll changes, cards circulate forever with zero breaks!
