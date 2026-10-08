@@ -9,6 +9,7 @@ import { ArrowUpRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ThreeCardsSpiralProps {
   onSelectTool: (tool: ToolDefinition) => void;
+  isModalOpen?: boolean;
 }
 
 // GLSL Vertex Shader: Computes world position and curvature normals
@@ -76,7 +77,7 @@ const cardFragmentShader = `
   }
 `;
 
-export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool }) => {
+export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool, isModalOpen = false }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const { soundEnabled, reducedMotion } = useSettings();
   const [catalog, setCatalog] = useState<ToolDefinition[]>(() => getToolCatalog());
@@ -87,6 +88,18 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
   const [activeFrontIndex, setActiveFrontIndex] = useState<number>(0);
   const activeFrontIdRef = useRef<string>(getToolCatalog()[0]?.id || '');
   const targetScrollRef = useRef<number>(0);
+  const currentScrollRef = useRef<number>(0);
+
+  // Stable references that never trigger scene recreation
+  const onSelectToolRef = useRef(onSelectTool);
+  useEffect(() => {
+    onSelectToolRef.current = onSelectTool;
+  }, [onSelectTool]);
+
+  const isModalOpenRef = useRef(isModalOpen);
+  useEffect(() => {
+    isModalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
 
   // Step 1 card backward along helical loop
   const handlePrevCard = (e?: React.MouseEvent) => {
@@ -205,7 +218,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     // 4. Closed 3D Helical Loop Formulation (100% Continuous Periodic Loop)
     // Period = 2 * PI. As currentScroll changes, cards circulate forever with zero breaks!
-    let currentScroll = 0;
+    let currentScroll = currentScrollRef.current;
     let mouseX = 0;
     let mouseY = 0;
     let isDragging = false;
@@ -259,6 +272,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     // 5. User Interaction Listeners - Smooth, Calibrated & Controlled
     const handleWheel = (e: WheelEvent) => {
+      if (isModalOpenRef.current) return;
       e.preventDefault();
       // Controlled smooth wheel speed
       targetScrollRef.current += e.deltaY * 0.0018;
@@ -266,6 +280,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     };
 
     const handlePointerDown = (e: PointerEvent) => {
+      if (isModalOpenRef.current) return;
       isDragging = true;
       dragVelocity = 0;
       startPointerX = e.clientX;
@@ -274,6 +289,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     };
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (isModalOpenRef.current) return;
       // Parallax
       mouseX = (e.clientX / width - 0.5) * 1.5;
       mouseY = (e.clientY / height - 0.5) * 1.5;
@@ -291,6 +307,10 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     };
 
     const handlePointerUp = (e: PointerEvent) => {
+      if (isModalOpenRef.current) {
+        isDragging = false;
+        return;
+      }
       isDragging = false;
       const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       const elapsed = Date.now() - pointerDownPos.time;
@@ -308,7 +328,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
           const tool = hit.userData.tool as ToolDefinition;
           if (tool) {
             soundEngine.playSearchPulse();
-            onSelectTool(tool);
+            onSelectToolRef.current(tool);
           }
         }
       }
@@ -325,12 +345,14 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let currentHoveredMesh: THREE.Mesh | null = null;
 
     const handleMouseMoveForRaycast = (e: MouseEvent) => {
+      if (isModalOpenRef.current) return;
       const rect = mount.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / height) * 2 + 1;
     };
 
     const handleClickForRaycast = (e: MouseEvent) => {
+      if (isModalOpenRef.current) return;
       const rect = mount.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / height) * 2 + 1;
@@ -343,7 +365,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         const tool = hit.userData.tool as ToolDefinition;
         if (tool) {
           soundEngine.playSearchPulse();
-          onSelectTool(tool);
+          onSelectToolRef.current(tool);
         }
       }
     };
@@ -366,8 +388,17 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     let animationFrameId: number;
 
     const animate = () => {
+      // If modal is open, completely freeze inertia & drift, keep scene perfectly still
+      if (isModalOpenRef.current) {
+        dragVelocity = 0;
+        renderer.render(scene, camera);
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+
       // Smooth, weighted interpolation for organic glide
       currentScroll += (targetScrollRef.current - currentScroll) * 0.075;
+      currentScrollRef.current = currentScroll;
 
       // Kinetic inertia momentum on swipe release - smooth natural deceleration
       if (!isDragging && Math.abs(dragVelocity) > 0.00005) {
@@ -472,7 +503,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       });
       renderer.dispose();
     };
-  }, [displayTools, soundEnabled, reducedMotion, onSelectTool, catalog.length]);
+  }, [catalog.length, soundEnabled, reducedMotion]);
 
   return (
     <div className="relative w-full h-full min-h-screen flex items-center justify-center overflow-hidden select-none">
@@ -480,7 +511,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       <div ref={mountRef} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-none select-none" />
 
       {/* Floating Pacomepertant-style Cursor Tooltip Tag */}
-      {hoveredTool && (
+      {!isModalOpen && hoveredTool && (
         <div
           style={{
             left: `${hoveredTool.x}px`,
@@ -503,7 +534,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       )}
 
       {/* Mobile & Desktop Active Front-Card HUD Dock */}
-      {activeFrontTool && (
+      {!isModalOpen && activeFrontTool && (
         <div className="fixed bottom-4 sm:bottom-8 left-4 right-[4.5rem] sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-md z-30 pointer-events-auto select-none animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="relative overflow-hidden rounded-2xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/15 p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
             {/* Top Cyan Glow Accent Line */}
@@ -561,7 +592,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
               type="button"
               onClick={() => {
                 soundEngine.playSearchPulse();
-                onSelectTool(activeFrontTool);
+                onSelectToolRef.current(activeFrontTool);
               }}
               className="w-full py-2 sm:py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(6,182,212,0.4)] active:scale-[0.98] transition-all cursor-pointer"
             >

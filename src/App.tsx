@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { BackgroundCanvas } from './components/BackgroundCanvas';
@@ -41,11 +41,11 @@ const WebHubExperience: React.FC = () => {
     return () => window.removeEventListener('webhub:catalog_updated', handleUpdate);
   }, []);
 
-  const handleSelectTool = (tool: ToolDefinition) => {
+  const handleSelectTool = useCallback((tool: ToolDefinition) => {
     setActiveTool(tool.id);
     setFocusedTool(tool);
     setIsFocusModalOpen(true);
-  };
+  }, [setActiveTool]);
 
   const handleOpenAddModal = () => {
     setToolToEdit(null);
@@ -79,7 +79,7 @@ const WebHubExperience: React.FC = () => {
       {/* Main Full-Screen 3D Spiral or List Experience */}
       <main className="relative w-full h-full z-10 flex items-center justify-center">
         {currentView === 'spiral' ? (
-          <ThreeCardsSpiral onSelectTool={handleSelectTool} />
+          <ThreeCardsSpiral onSelectTool={handleSelectTool} isModalOpen={isFocusModalOpen} />
         ) : (
           <EditorialListView catalog={catalog} onSelectTool={handleSelectTool} />
         )}

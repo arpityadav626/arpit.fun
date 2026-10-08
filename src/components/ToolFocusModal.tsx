@@ -55,8 +55,6 @@ export const ToolFocusModal: React.FC<ToolFocusModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !tool) return null;
-
   const getToolIcon = (id: string) => {
     switch (id) {
       case 'film':
@@ -74,29 +72,37 @@ export const ToolFocusModal: React.FC<ToolFocusModalProps> = ({
     }
   };
 
-  const Icon = getToolIcon(tool.id);
+  const Icon = tool ? getToolIcon(tool.id) : Sparkles;
 
   return (
     <AnimatePresence>
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="focused-tool-title"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 lg:p-10 backdrop-blur-2xl bg-black/80 overflow-y-auto"
-        onClick={onClose}
-      >
+      {isOpen && tool && (
         <motion.div
-          initial={reducedMotion ? {} : { opacity: 0, scale: 0.93, y: 25 }}
-          animate={reducedMotion ? { opacity: 1, scale: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-          exit={reducedMotion ? {} : { opacity: 0, scale: 0.93, y: 20 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative w-full max-w-5xl lg:max-w-6xl h-[90vh] max-h-[900px] min-h-[600px] flex flex-col rounded-3xl bg-[#09090c] border border-zinc-800/80 shadow-[0_25px_90px_rgba(0,0,0,0.95)] overflow-hidden text-zinc-100"
-          onClick={(e) => e.stopPropagation()}
+          key="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="focused-tool-title"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 lg:p-10 backdrop-blur-2xl bg-black/80 overflow-y-auto"
+          onClick={onClose}
         >
+          <motion.div
+            key={`modal-card-${tool.id}`}
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 18 }}
+            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 14 }}
+            transition={{
+              type: 'spring',
+              damping: 32,
+              stiffness: 280,
+              mass: 0.85,
+            }}
+            className="relative w-full max-w-5xl lg:max-w-6xl h-[90vh] max-h-[900px] min-h-[600px] flex flex-col rounded-3xl bg-[#09090c] border border-zinc-800/80 shadow-[0_25px_90px_rgba(0,0,0,0.95)] overflow-hidden text-zinc-100"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Streamlined, Minimalist Top Bar */}
           <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-zinc-850 bg-[#0e0e12]/80 select-none">
             {/* Left: Back & Active Tool Name */}
@@ -205,6 +211,7 @@ export const ToolFocusModal: React.FC<ToolFocusModalProps> = ({
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };
