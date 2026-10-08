@@ -254,8 +254,10 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     // Calibrated smooth & controlled multipliers (neither sluggish nor overly fast)
-    const dragMultiplierY = isTouch ? 0.0075 : 0.0032;
-    const dragMultiplierX = isTouch ? 0.0065 : 0.0035;
+    const dragMultiplierY = isTouch ? 0.0075 : 0.0048;
+    const dragMultiplierX = isTouch ? 0.0065 : 0.0048;
+
+    let lastWheelTime = 0;
 
     const evalClosedLoop = (theta: number) => {
       // Perfectly centered periodic 3D space ribbon
@@ -296,9 +298,15 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     const handleWheel = (e: WheelEvent) => {
       if (isModalOpenRef.current) return;
       e.preventDefault();
-      // Controlled smooth wheel speed
-      targetScrollRef.current += e.deltaY * 0.0018;
-      dragVelocity = 0;
+      lastWheelTime = Date.now();
+
+      // Normalize delta across mice / trackpads (deltaMode 0: pixels, 1: lines, 2: pages)
+      const rawDelta = e.deltaY * (e.deltaMode === 1 ? 28 : e.deltaMode === 2 ? 400 : 1);
+      // Fluid, responsive wheel velocity
+      const wheelMove = rawDelta * 0.0028;
+      targetScrollRef.current += wheelMove;
+      // Transfer smooth kinetic momentum on wheel release
+      dragVelocity = wheelMove * 0.35;
     };
 
     const handlePointerDown = (e: PointerEvent) => {
@@ -356,7 +364,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       }
     };
 
-    mount.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
@@ -428,8 +436,12 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         dragVelocity *= 0.85; // Decelerates gracefully within 300-400ms
       }
 
-      // Magnetic snap to center: smoothly locks nearest card dead-center
-      if (!isDragging && Math.abs(dragVelocity) <= 0.0002) {
+      // Check if user is actively interacting (dragging or wheeling)
+      const isWheeling = Date.now() - lastWheelTime < 280;
+      const isUserInteracting = isDragging || isWheeling;
+
+      // Magnetic snap to center: smoothly locks nearest card dead-center ONLY when idle!
+      if (!isUserInteracting && Math.abs(dragVelocity) <= 0.0002) {
         const step = (Math.PI * 2) / Math.max(1, totalCards);
         const snapTarget = Math.round(targetScrollRef.current / step) * step;
         targetScrollRef.current += (snapTarget - targetScrollRef.current) * 0.12;
@@ -509,7 +521,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      mount.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
@@ -557,9 +569,9 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
         </div>
       )}
 
-      {/* Mobile & Desktop Active Front-Card HUD Dock */}
+      {/* Mobile-Only Active Front-Card HUD Dock (Hidden on Desktop) */}
       {!isModalOpen && activeFrontTool && (
-        <div className="fixed bottom-4 sm:bottom-8 left-4 right-[4.5rem] sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-md z-30 pointer-events-auto select-none animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="md:hidden fixed bottom-4 left-4 right-[4.5rem] z-30 pointer-events-auto select-none animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="relative overflow-hidden rounded-2xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/15 p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
             {/* Top Cyan Glow Accent Line */}
             <div className="absolute top-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
