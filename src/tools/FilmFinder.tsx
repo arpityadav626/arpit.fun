@@ -413,7 +413,7 @@ export const FilmFinder: React.FC = () => {
                   const title = item.title || item.name || 'Untitled';
                   const releaseDate = item.release_date || item.first_air_date || '';
                   const year = releaseDate ? releaseDate.split('-')[0] : '';
-                  const poster = getTmdbPosterUrl(item.poster_path, 'w342');
+                  const poster = getTmdbPosterUrl(item.poster_path, 'w780');
 
                   return (
                     <motion.div

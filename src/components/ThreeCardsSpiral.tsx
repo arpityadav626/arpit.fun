@@ -170,10 +170,11 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
     camera.position.set(0, 0, 12.6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
     renderer.setSize(width, height);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
     // 2. Cinematic Lighting
@@ -410,6 +411,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
       height = mount.clientHeight;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
       renderer.setSize(width, height);
     };
     window.addEventListener('resize', handleResize);

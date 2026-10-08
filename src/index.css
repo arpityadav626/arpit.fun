@@ -18,6 +18,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+  }
+
+  canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+  }
 }
 
 /* Custom marquee keyframes */

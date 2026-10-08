@@ -48,5 +48,5 @@ export async function searchOpenLibrary(query: string): Promise<OpenLibraryDoc[]
 
 export const getOpenLibraryCoverUrl = (coverId?: number): string | null => {
   if (!coverId || coverId <= 0) return null;
-  return `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+  return `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
 };

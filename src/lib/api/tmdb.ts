@@ -73,7 +73,10 @@ export async function searchTmdb(query: string, apiKey: string): Promise<TmdbMed
   }
 }
 
-export const getTmdbPosterUrl = (path: string | null, size: 'w342' | 'w500' | 'original' = 'w500'): string | null => {
+export const getTmdbPosterUrl = (
+  path: string | null,
+  size: 'w342' | 'w500' | 'w780' | 'original' = 'w780'
+): string | null => {
   if (!path) return null;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 };

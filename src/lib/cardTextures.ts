@@ -11,17 +11,22 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
   const W = 1024;
   const H = 640;
   const canvas = document.createElement('canvas');
-  // 2x Retina super-sampling for pin-sharp fidelity
-  canvas.width = W * 2;
-  canvas.height = H * 2;
+  // 3x Ultra-HD Retina super-sampling (3072x1920) for 100% crystal-clear sharpness
+  const scale = 3;
+  canvas.width = W * scale;
+  canvas.height = H * scale;
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
     return new THREE.CanvasTexture(canvas);
   }
 
-  // Scale 2x for sub-pixel anti-aliased sharpness
-  ctx.scale(2, 2);
+  // Maximum quality smoothing for sub-pixel anti-aliasing
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Scale 3x for sub-pixel anti-aliased sharpness
+  ctx.scale(scale, scale);
 
   const padding = 16;
   const cardW = W - padding * 2;
@@ -580,9 +585,11 @@ export function createCardTexture(tool: ToolDefinition, _index: number): THREE.C
   ctx.restore(); // Restore outer clip
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
   texture.anisotropy = 16;
+  texture.needsUpdate = true;
   return texture;
 }
