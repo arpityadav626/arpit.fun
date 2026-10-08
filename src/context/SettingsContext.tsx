@@ -119,7 +119,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Ignore
     }
     if (enabled) {
-      soundEngine.playChime(440, 'sine', 0.2);
+      soundEngine.playSearchPulse();
     }
   };
 

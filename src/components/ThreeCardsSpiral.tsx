@@ -113,7 +113,7 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
   // Step 1 card forward along helical loop (snapped)
   const handleNextCard = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (soundEngine.isEnabled()) soundEngine.playKeyClick();
+    if (soundEnabled) soundEngine.playKeyClick();
     const step = (Math.PI * 2) / Math.max(1, catalog.length);
     const currentSnap = Math.round(targetScrollRef.current / step);
     targetScrollRef.current = (currentSnap + 1) * step;
@@ -491,9 +491,6 @@ export const ThreeCardsSpiral: React.FC<ThreeCardsSpiralProps> = ({ onSelectTool
             currentHoveredMesh.scale.set(1, 1, 1);
           }
           currentHoveredMesh = hitMesh;
-          if (soundEnabled) {
-            soundEngine.playKeyClick();
-          }
         }
         hitMesh.scale.set(1.08, 1.08, 1.08);
         document.body.style.cursor = 'pointer';
